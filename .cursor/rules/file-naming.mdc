@@ -1,0 +1,46 @@
+---
+description: Именование файлов Dart — snake_case суффиксы по слою и роли
+alwaysApply: true
+---
+
+# Именование файлов
+
+Все файлы: **snake_case**. Имя отражает роль, не форм-фактор.
+
+## Presentation
+
+| Роль | Шаблон | Пример |
+| --- | --- | --- |
+| Smart-экран | `{name}_screen.dart` | `chat_list_screen.dart` |
+| Dumb-view | `{name}_view.dart` | `chat_list_view.dart` |
+| Layout (dumb) | `{name}_layout.dart` | `chats_tablet_layout.dart` |
+| Notifier | `{name}_controller.dart` | `chat_list_controller.dart` |
+| UI state | `{name}_state.dart` | `chat_list_state.dart` |
+| Feature widget (dumb) | описательное имя | `chat_bubble.dart`, `chat_list_tile.dart` |
+
+Один экран = один префикс `{name}` для пары screen/view/controller/state.
+
+## Domain / Data
+
+| Роль | Шаблон | Пример |
+| --- | --- | --- |
+| Entity | `{name}.dart` | `message.dart` |
+| Repository interface | `{name}_repository.dart` | `chat_repository.dart` |
+| Repository impl | `{name}_repository_impl.dart` | `chat_repository_impl.dart` |
+| DataSource | `{name}_remote_datasource.dart` / `{name}_local_datasource.dart` | `auth_remote_datasource.dart` |
+| DTO | `{name}_dto.dart` | `message_dto.dart` |
+| Provider (codegen) | `{name}_provider.dart` | `chat_repository_provider.dart` |
+
+## Generated
+
+- `part '{file}.g.dart';` — Riverpod / json_serializable
+- `part '{file}.freezed.dart';` — Freezed  
+Не создавать и не править `*.g.dart` / `*.freezed.dart` вручную.
+
+## DON'T
+
+- `ChatListScreen.dart`, `chatListView.dart` — только snake_case
+- `chat_list_mobile.dart` / суффиксы `_tablet` / `_desktop` у controller/state/entity
+- Путать `_screen` (smart) и `_view` (dumb)
+- Называть impl без `_impl` или interface с `_impl`
+---

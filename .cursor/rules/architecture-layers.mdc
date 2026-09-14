@@ -1,0 +1,42 @@
+---
+description: Слои архитектуры E-Chat — ответственность и зависимости (из docs/architecture.md)
+alwaysApply: true
+---
+
+# Слои и поток данных
+
+Стек: Riverpod 3 + annotations, Freezed, fpdart (`Either` / `TaskEither`).
+
+## Поток (строго вниз)
+
+```
+UI (smart) → Notifier → Repository (interface) → DataSource → Firebase/Local
+```
+
+Обратно: `Either<Failure, T>` → Notifier → props/callbacks → dumb UI.
+
+## Ответственность слоёв
+
+| Слой | Делает | Не знает о |
+| --- | --- | --- |
+| **Presentation (smart)** | `ref.watch`/`ref.read`, breakpoint → layout, state → props, navigation/snackbar | Firestore SDK, DTO |
+| **Presentation (dumb)** | Рисует UI по props + callbacks | Riverpod, Repository, Firebase, breakpoints |
+| **Domain** | Entities (Freezed), interfaces репозиториев, Failures | Flutter, Firebase, Riverpod |
+| **Data** | Impl репозиториев, DTO, DataSources, маппинг DTO→Entity | Widgets, Notifiers |
+| **Application** | Use cases — только если логика reused в 2+ features | — |
+
+## Зависимости
+
+- Presentation → Domain (+ Riverpod)
+- Data → Domain (+ Firebase SDK)
+- Domain → только fpdart / Freezed
+- Features не импортируют друг друга циклически; контракты — в `domain` или `shared`
+
+## Ошибки и fpdart
+
+- Repository: `Future`/`Stream` of `Either<Failure, T>` (не бросать наружу)
+- Композиция: 1 шаг — `TaskEither.tryCatch`; 2+ — `*.Do`; UI — `fold` (см. правило `fpdart`)
+- Notifier: `fold` → `Failure` в state / `AsyncValue.error`
+- UI: только `Failure.displayMessage` (+ retry); не `String` / `Option` для ошибок
+- Firebase / Auth SDK — только в DataSource; не в `presentation/`
+---

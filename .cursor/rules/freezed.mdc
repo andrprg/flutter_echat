@@ -1,0 +1,63 @@
+---
+description: Freezed — entities, DTO, UI state, sealed Failure; где нужен json
+globs:
+  - "**/features/**/domain/**/*.dart"
+  - "**/features/**/data/dto/**/*.dart"
+  - "**/*_dto.dart"
+  - "**/*_state.dart"
+  - "**/core/error/**/*.dart"
+alwaysApply: false
+---
+
+# Freezed
+
+Источник: `docs/architecture.md` §7, шпаргалка `docs/dart-freezed.md`.
+
+## Где применять
+
+| Объект | Freezed | json_serializable |
+| --- | --- | --- |
+| Domain entity | да | нет |
+| DTO (Firestore) | да | да (`fromJson` / `toJson`) |
+| UI state | да | нет |
+| Failure | да (`@freezed sealed`) | нет |
+| Union (OTP step, auth flow) | да | нет |
+
+## Паттерны
+
+```dart
+// Entity — только freezed
+@freezed
+abstract class Message with _$Message {
+  const factory Message({required String id, ...}) = _Message;
+}
+
+// DTO — freezed + json; toEntity в data/
+@freezed
+abstract class MessageDto with _$MessageDto {
+  const factory MessageDto({...}) = _MessageDto;
+  factory MessageDto.fromJson(Map<String, dynamic> json) =>
+      _$MessageDtoFromJson(json);
+}
+
+// UI state — freezed, без json; ошибки как Failure?
+@freezed
+abstract class OtpState with _$OtpState {
+  const factory OtpState({
+    @Default('') String code,
+    Failure? error,
+  }) = _OtpState;
+}
+```
+
+- Immutable: изменения только через `copyWith`
+- Маппинг DTO → Entity **только в data/** (extension на DTO)
+- Текст ошибки в UI — `Failure.displayMessage`, не `String` в state как «ошибка»
+
+## DON'T
+
+- Мутабельные классы / `setState` для domain/UI state моделей
+- `json_serializable` на entity или UI state
+- `Map<String, dynamic>` / `dynamic` в domain и presentation вместо Freezed
+- Править `*.freezed.dart` вручную
+---

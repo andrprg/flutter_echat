@@ -1,0 +1,48 @@
+---
+description: Presentation — Smart/Dumb, Notifier, adaptive layouts
+globs:
+  - "**/features/**/presentation/**/*.dart"
+  - "**/shared/widgets/**/*.dart"
+  - "**/shared/layouts/**/*.dart"
+  - "**/app/router/**/*.dart"
+  - "**/app/adaptive/**/*.dart"
+alwaysApply: false
+---
+
+# Presentation layer
+
+## Smart (`*_screen.dart`, shell)
+
+- `ConsumerWidget` / `ConsumerStatefulWidget`
+- `ref.watch` / `ref.read`, выбор layout по `appBreakpointProvider`
+- Маппинг state → props + callbacks; navigation / snackbar / invalidate
+- Один smart на route; без тяжёлой вёрстки списков/пузырей
+
+## Dumb (`*_view.dart`, tiles, `shared/widgets`, layouts)
+
+- `StatelessWidget` / `StatefulWidget` **без** `flutter_riverpod`
+- Только props + callbacks (`VoidCallback`, `ValueChanged`)
+- Не знает `WidgetRef`, Repository, Firebase, `AppBreakpoint`, `MediaQuery`-пороги
+
+## Notifier (`*_controller.dart`) + state (`*_state.dart`)
+
+- `@riverpod` AsyncNotifier / Notifier; Freezed UI state
+- Один controller на экран для **всех** phone/tablet/desktop
+- Either → state / `AsyncValue.error`; без MediaQuery и «это tablet?»
+
+## Adaptive
+
+- Breakpoints только через `app/adaptive/` (`AppBreakpoint`: phone / tablet≥600 / desktop≥1024)
+- Layout-варианты — композиции dumb рядом со screen, не копии фич
+
+```dart
+// ✅ Smart выбирает layout
+return switch (breakpoint) {
+  AppBreakpoint.phone => PhoneLayout(child: view),
+  AppBreakpoint.tablet => TabletLayout(child: view),
+  AppBreakpoint.desktop => DesktopLayout(child: view),
+};
+
+// ❌ ref.watch в *_view.dart / shared widgets
+```
+---

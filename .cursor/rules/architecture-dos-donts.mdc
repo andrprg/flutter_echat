@@ -1,0 +1,33 @@
+---
+description: DO/DON'T команды по архитектуре E-Chat
+alwaysApply: true
+---
+
+# Правила команды (кратко)
+
+Полный источник: `docs/architecture.md` §14.
+Детали по стеку подключаются по файлам: `riverpod`, `freezed`, `fpdart`, `file-naming`, слои.
+
+## DO
+
+- `@riverpod` / `@Riverpod` для всех новых провайдеров (см. `riverpod`)
+- Freezed для state, entity, failure, DTO (см. `freezed`)
+- `Either<Failure, T>` на границе domain ↔ data; цепочки 2+ — Do-нотация fpdart (см. `fpdart`)
+- `Option` для отсутствующих значений в domain; ошибки только через `Failure`
+- Smart = Consumer*; Dumb = обычный Widget без Riverpod
+- Один controller на экран; layouts отдельно для форм-факторов
+- Breakpoints только через `appBreakpointProvider`
+
+## DON'T
+
+- Ручные `Provider`/`FutureProvider` без codegen; `StateNotifier`/`ChangeNotifier` для новых фич
+- `Firebase*.instance` / SDK в виджетах и `presentation/`
+- `ref` / `WidgetRef` в dumb (`*_view.dart`, shared widgets)
+- Отдельные Notifier или копии фич «для tablet/desktop»
+- `setState` для бизнес-логики; мутабельный UI/domain state вместо Freezed
+- `dynamic` / `Map<String, dynamic>` в domain и presentation
+- `catch (_) {}` без `Failure`; ошибки как `String` / `Option`
+- Вложенный `flatMap` вместо `*.Do(($ ) { ... })` при 2+ шагах
+- Хардкод порогов `MediaQuery` в обход `AppBreakpoint`
+- Циклические imports между features
+---

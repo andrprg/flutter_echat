@@ -1,0 +1,62 @@
+---
+description: Предпочтительное использование fpdart — Either, Option, TaskEither, Do-нотация
+globs:
+  - "**/features/**/data/**/*.dart"
+  - "**/features/**/domain/**/*.dart"
+  - "**/features/**/application/**/*.dart"
+  - "**/features/**/presentation/**/*_controller.dart"
+  - "**/core/error/**/*.dart"
+alwaysApply: false
+---
+
+# fpdart
+
+Источник: `docs/architecture.md` §8, шпаргалка `docs/dart-fpdart.md`.
+
+## Когда что использовать
+
+| Тип | Где | Зачем |
+| --- | --- | --- |
+| `Either<Failure, T>` | Repository API, sync-цепочки | явная ошибка vs успех |
+| `Stream<Either<Failure, T>>` | realtime watch | ошибка подписки внутри эмиссии |
+| `TaskEither<Failure, T>` | async-композиция в data / use case | несколько шагов без вложенных try |
+| `Option<T>` | domain: «значения может не быть» | avatar, draft; **не** для ошибок |
+
+## Правила
+
+1. Публичные методы репозиториев — `Future<Either<Failure, T>>` или `Stream<Either<...>>`, не бросать исключения наружу.
+2. Ошибки — **только** sealed `Failure`, никогда `Option` / `String` / nullable error.
+3. Один async-шаг → `TaskEither.tryCatch(...).run()` (Do не нужен).
+4. Цепочка **2+** шагов → только `TaskEither.Do` / `Either.Do` / `Option.Do`, не вложенный `flatMap`.
+5. На границе Notifier → UI → `fold` / `match` (Do не нужен).
+6. Firebase-исключения ловить в DataSource / `tryCatch` и маппить в `Failure`.
+
+## Примеры
+
+```dart
+// ✅ один шаг
+return TaskEither.tryCatch(
+  () => _remote.sendMessage(...),
+  (e, _) => e is FirebaseException ? Failure.firestore(e.code) : Failure.unexpected(e),
+).map((_) => unit).run();
+
+// ✅ 2+ шага
+return TaskEither<Failure, Chat>.Do(($) async {
+  final uid = await $(TaskEither.fromEither(uidEither));
+  await $(TaskEither.tryCatch(() => _remote.createGroup(...), mapError));
+  return await $(TaskEither(() => getChatById(chatId)));
+}).run();
+
+// ✅ Notifier
+result.fold(
+  (failure) => state = state.copyWith(error: failure),
+  (_) => ref.read(appRouterProvider).go('/home'),
+);
+```
+
+## DON'T в Do()
+
+- `throw` вручную; `await` без `$`
+- вкладывать один `Do` в другой
+- вызывать `$` внутри `map` / `then` / `forEach`
+---

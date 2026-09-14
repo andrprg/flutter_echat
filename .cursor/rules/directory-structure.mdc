@@ -1,0 +1,40 @@
+---
+description: Структура каталогов lib/ feature-first (именование — в file-naming.mdc)
+globs:
+  - "**/features/**/*.dart"
+  - "**/app/**/*.dart"
+  - "**/shared/**/*.dart"
+  - "**/core/**/*.dart"
+  - "**/lib/main.dart"
+alwaysApply: false
+---
+
+# Структура каталогов
+
+Feature-first. Общее — только `app/`, `core/`, `shared/`. Именование файлов: правило `file-naming`.
+
+```
+lib/
+├── main.dart
+├── app/                    # MaterialApp, router, adaptive, app providers
+│   ├── router/             # SMART shell (bottom bar / rail по breakpoint)
+│   ├── adaptive/           # AppBreakpoint, providers, helpers
+│   └── providers/
+├── core/                   # failures, extensions, utils, constants
+├── shared/
+│   ├── widgets/            # DUMB переиспользуемые виджеты
+│   ├── layouts/            # DUMB MaxWidthBox, TwoPane, ThreePane
+│   └── providers/          # firebase, shared services
+└── features/<feature>/
+    ├── domain/             # entities/, repositories/ (interfaces)
+    ├── data/               # datasources/, dto/, repositories/ (*_impl)
+    └── presentation/
+        └── <screen>/       # *_screen, *_view, *_controller, *_state
+```
+
+## Запрещено
+
+- Папки `mobile/` / `tablet/` / `desktop/` с копиями фич — только разные layout-композиции
+- Отдельный Notifier «для tablet/desktop»
+- Бизнес-код и Firebase в `shared/widgets` или dumb views
+---
