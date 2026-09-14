@@ -15,6 +15,12 @@ analyzer:
     - '**/*.g.dart'
     # Codegen Freezed.
     - '**/*.freezed.dart'
+    - android/**
+    - ios/**
+    - web/**
+    - windows/**
+    - macos/**
+    - linux/**
   language:
     # Запрещает неявные downcast'ы (Object → T без as).
     strict-casts: true
