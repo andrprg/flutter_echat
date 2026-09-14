@@ -12,22 +12,28 @@
 
 ---
 
+
+
 ## Обзор фаз
 
-| Фаза | Название | Результат |
-| --- | --- | --- |
-| 0 | Фундамент | Структура, стек, adaptive shell, smart/dumb каркас |
-| 1 | Firebase & Core | Подключён Firebase, core-слой, rules |
-| 2 | Auth & Onboarding | Splash → Login → OTP → Profile setup (все ширины) |
-| 3 | Chats MVP | Список + переписка 1:1; phone stack / tablet–desktop master–detail |
-| 4 | Groups | Группы + split view на wide |
-| 5 | Profile & More | Профиль, настройки; constrained layout на desktop |
-| 6 | Расширения | Звонки, push, typing, медиа, block/report |
-| 7 | Adaptive polish & multi-platform | Desktop chrome, keyboard, resize, golden по breakpoints |
-| 8 | Релиз | Тесты, polish, store / desktop distribuция |
-| 9 | Backlog | COMING SOON из Figma |
+
+| Фаза | Название                         | Результат                                                          |
+| ---- | -------------------------------- | ------------------------------------------------------------------ |
+| 0    | Фундамент                        | Структура, стек, adaptive shell, smart/dumb каркас                 |
+| 1    | Firebase & Core                  | Подключён Firebase, core-слой, rules                               |
+| 2    | Auth & Onboarding                | Splash → Login → OTP → Profile setup (все ширины)                  |
+| 3    | Chats MVP                        | Список + переписка 1:1; phone stack / tablet–desktop master–detail |
+| 4    | Groups                           | Группы + split view на wide                                        |
+| 5    | Profile & More                   | Профиль, настройки; constrained layout на desktop                  |
+| 6    | Расширения                       | Звонки, push, typing, медиа, block/report                          |
+| 7    | Adaptive polish & multi-platform | Desktop chrome, keyboard, resize, golden по breakpoints            |
+| 8    | Релиз                            | Тесты, polish, store / desktop distribuция                         |
+| 9    | Backlog                          | COMING SOON из Figma                                               |
+
 
 ---
+
+
 
 ## Фаза 0 — Фундамент
 
@@ -35,11 +41,14 @@
 
 ### 0.1. Зависимости и codegen
 
-- [ ] Добавить в `pubspec.yaml`: `flutter_riverpod`, `riverpod_annotation`, `freezed_annotation`, `json_annotation`, `fpdart`
-- [ ] Dev: `riverpod_generator`, `freezed`, `build_runner`, `json_serializable`, `riverpod_lint`, `custom_lint`
-- [ ] Настроить `analysis_options.yaml` (riverpod_lint)
-- [ ] Проверить: `dart run build_runner build --delete-conflicting-outputs`
-- [ ] Включить desktop targets: `flutter create --platforms=windows,macos,linux` (по необходимости) + web
+- [x] Добавить в `pubspec.yaml`: `flutter_riverpod`, riverpod_annotation, `freezed_annotation`, `json_annotation`, `fpdart`
+- [x] Dev: riverpod_generator, `freezed`, `build_runner`, `json_serializable`, `riverpod_lint` (≥3.1; **без** `custom_lint`)
+- [x] Добавить правила в cursor
+- [x] Настроить `analysis_options.yaml`: `plugins: riverpod_lint: <version>` + exclude `*.g.dart` / `*.freezed.dart` ([analysis-options-riverpod-lint.md](./analysis-options-riverpod-lint.md))
+- [x] Проверить: `dart run build_runner build --delete-conflicting-outputs`
+- [x] Включить desktop targets: `flutter create --platforms=windows,macos,linux` (по необходимости) + web
+
+
 
 ### 0.2. Структура `lib/`
 
@@ -50,6 +59,8 @@
 - [ ] Создать папки features: `onboarding`, `auth`, `chats`, `groups`, `profile`, `more`
 - [ ] В каждом feature presentation: соглашение `*_screen.dart` (smart) + `*_view.dart` (dumb)
 
+
+
 ### 0.3. UI / Design system (dumb)
 
 - [ ] Перенести цвета E-Chat из Figma (Blue `#1565C0`, Light Blue `#40C4FF`, …)
@@ -57,6 +68,8 @@
 - [ ] Базовые **dumb**-компоненты: `EChatButton`, `EChatTextField`, `EChatAppBar`, `EChatAvatar`
 - [ ] Тема Light / Dark (экран More → Dark Mode)
 - [ ] Density / spacing tokens с учётом desktop (чуть плотнее списки, `maxContentWidth`)
+
+
 
 ### 0.4. Навигация и adaptive shell
 
@@ -67,6 +80,8 @@
 - [ ] Заготовки auth flow (guard: неавторизован → login)
 - [ ] Заготовка master–detail слота для `/chats` и `/groups` (wide)
 
+
+
 ### 0.5. Конвенции smart / dumb
 
 - [ ] Документировать в коде/README feature: smart не содержит тяжёлую вёрстку; dumb не импортирует Riverpod
@@ -74,11 +89,15 @@
 
 ---
 
+
+
 ## Фаза 1 — Firebase & Core
 
 **Цель:** Firebase работает, rules задеплоены, core ready.
 
 > Инструкции: [firebase-flutter-connect.md](./firebase-flutter-connect.md), [firebase-setup.md](./firebase-setup.md), [firebase-events.md](./firebase-events.md)
+
+
 
 ### 1.1. Подключение Flutter
 
@@ -87,6 +106,8 @@
 - [ ] Android: Google Services plugin, `minSdk 23`
 - [ ] iOS: `pod install`, проверка `GoogleService-Info.plist`
 - [ ] Desktop/web: проверить поддерживаемые Firebase-плагины; fallback-план для Auth/Storage где SDK ограничен
+
+
 
 ### 1.2. Firebase Console
 
@@ -97,6 +118,8 @@
 - [ ] Создать **Storage**
 - [ ] Добавить тестовые номера OTP (dev)
 
+
+
 ### 1.3. Rules & indexes
 
 - [ ] `firebase/firestore.rules` — по [firebase-setup.md](./firebase-setup.md)
@@ -104,6 +127,8 @@
 - [ ] `firebase/database.rules.json` (`/status`, `/typing`)
 - [ ] `firebase/storage.rules`
 - [ ] `firebase deploy --only firestore:rules,firestore:indexes,database,storage`
+
+
 
 ### 1.4. Core providers
 
@@ -113,6 +138,8 @@
 - [ ] `@Riverpod(keepAlive)` — `firebaseStorageProvider`
 - [ ] `FirestorePaths` — константы коллекций ([firebase-database.md §4](./firebase-database.md))
 
+
+
 ### 1.5. Cloud Functions (минимум)
 
 - [ ] Init `functions/` (TypeScript)
@@ -121,6 +148,8 @@
 - [ ] Deploy functions (Blaze plan)
 
 ---
+
+
 
 ## Фаза 2 — Auth & Onboarding
 
@@ -134,6 +163,8 @@
 - [ ] На desktop: ограничить ширину карусели; сохранить те же dumb-страницы
 - [ ] После завершения → Login
 
+
+
 ### 2.2. Feature `auth` — domain & data
 
 - [ ] Entity: `AuthUser`, `PhoneAuthSession`
@@ -142,6 +173,8 @@
 - [ ] `UserRemoteDataSource` — CRUD `users/{uid}`
 - [ ] DTO: `UserDto` + маппинг в entity
 - [ ] `@Riverpod(keepAlive) authRepositoryProvider`
+
+
 
 ### 2.3. Feature `auth` — Login / Register
 
@@ -153,11 +186,15 @@
 - [ ] `verifyPhoneNumber` → переход на OTP
 - [ ] Wide: форма в колонке с max-width, не full-bleed phone layout
 
+
+
 ### 2.4. Feature `auth` — OTP
 
 - [ ] **OTP Empty / Filled / Error / Resent Code** — `OtpScreen` (smart) + `OtpView` (dumb)
 - [ ] `OtpController` + `OtpState` (Freezed, ошибка через sealed `Failure`)
 - [ ] `signInWithCredential` → успех / Code Invalid
+
+
 
 ### 2.5. Feature `auth` — User Information
 
@@ -165,6 +202,8 @@
 - [ ] Загрузка аватара → Storage `avatars/{uid}/`
 - [ ] Создание `users/{uid}` (displayName, phone, eChatPublicId, …)
 - [ ] Redirect → Security setup или Home
+
+
 
 ### 2.6. Feature `security` (локально)
 
@@ -174,12 +213,16 @@
 - [ ] **Setting _ Notification** — запрос разрешения FCM / OS notifications
 - [ ] Создание `userSettings/{uid}` (defaults)
 
+
+
 ### 2.7. Auth guard
 
 - [ ] Stream `authStateChanges` → `@riverpod` `currentUserProvider`
 - [ ] Router redirect: нет user → `/login`; есть user без profile → `/signup/profile`
 
 ---
+
+
 
 ## Фаза 3 — Chats MVP (1:1)
 
@@ -194,6 +237,8 @@
 - [ ] `TypingRemoteDataSource` (RTDB `/typing/{chatId}/{uid}`)
 - [ ] `PresenceRemoteDataSource` (RTDB `/status/{uid}`)
 
+
+
 ### 3.2. Список чатов
 
 - [ ] **Chats** — `ChatListScreen` (smart) + `ChatListView` (dumb): last message, time, unread
@@ -202,6 +247,8 @@
 - [ ] **Chats _ Click Search** — фильтрация по имени locally
 - [ ] **Chats _ Click Add** → меню Add Friend / Create Group
 
+
+
 ### 3.3. Add Friend
 
 - [ ] **Add Function _ Add Friend** — поиск по телефону / имени (dumb dialog/page)
@@ -209,6 +256,8 @@
 - [ ] `ContactRepository` + запись `contacts/{ownerId_peerId}`
 - [ ] Создание direct chat при первом сообщении
 - [ ] Wide: modal/dialog вместо full-screen где уместно
+
+
 
 ### 3.4. Экран переписки
 
@@ -219,6 +268,8 @@
 - [ ] `ChatThreadController(chatId)` — optimistic send
 - [ ] Pagination: `limit(40)` + load more
 
+
+
 ### 3.5. Adaptive shell (chats)
 
 - [ ] `ChatsShellScreen` (smart): по breakpoint собирает layout
@@ -228,6 +279,8 @@
 - [ ] Deep link `/chats/:id` корректно открывает detail на всех ширинах
 - [ ] Resize окна: сохранение `selectedChatId`, без потери scroll state где возможно
 
+
+
 ### 3.6. Shared UI (dumb)
 
 - [ ] `ChatBubble`, `MessageStatusIcon`, `ChatListTile`
@@ -235,6 +288,8 @@
 - [ ] Shimmer / loading skeletons
 
 ---
+
+
 
 ## Фаза 4 — Groups
 
@@ -248,11 +303,15 @@
 - [ ] System message: «X created the group»
 - [ ] Wide: dialog / side sheet вместо full-screen flow
 
+
+
 ### 4.2. Список групп
 
 - [ ] **Groups** — отдельная вкладка (фильтр `type == group`)
 - [ ] `GroupListController` (можно reuse ChatList с фильтром) + dumb `GroupListView`
 - [ ] `GroupsShellScreen` — master–detail на tablet/desktop
+
+
 
 ### 4.3. Group conversation
 
@@ -261,6 +320,8 @@
 - [ ] **Add members to group** — обновление `participantIds` + members
 - [ ] Роли: owner / admin / member (базово)
 
+
+
 ### 4.4. Group settings (User/Group Information)
 
 - [ ] Mute Notification toggle → `members.isMuted`
@@ -268,6 +329,8 @@
 - [ ] Report / Block
 
 ---
+
+
 
 ## Фаза 5 — Profile & More
 
@@ -280,6 +343,8 @@
 - [ ] `UserRepository` + `UserController`
 - [ ] **Logout** — `FirebaseAuth.signOut` + clear local state
 
+
+
 ### 5.2. More — настройки
 
 - [ ] **More** — Language (en/ru), Dark Mode toggle, Sound
@@ -289,6 +354,8 @@
 - [ ] **Security** — переход к PIN / biometrics settings
 - [ ] **Help Center**, Terms, Privacy, About — static WebView или assets
 
+
+
 ### 5.3. User / Chat Information (1:1)
 
 - [ ] **Chats _ User Information** — Media, Links & Documents, Mute, Protected Chat, Custom Color/BG
@@ -297,6 +364,8 @@
 - [ ] Video Call / Call buttons (→ фаза 6)
 
 ---
+
+
 
 ## Фаза 6 — Расширения
 
@@ -310,11 +379,15 @@
 - [ ] **Conversation _ Record** — голосовые (mobile-first; desktop — upload audio file)
 - [ ] Превью медиа в ленте
 
+
+
 ### 6.2. Realtime
 
 - [ ] Online / last seen в шапке чата (`/status`)
 - [ ] Typing indicator (уже в 3.4 — polish)
 - [ ] Read receipts (`readBy` map) + галочки UI
+
+
 
 ### 6.3. Звонки
 
@@ -325,6 +398,8 @@
 - [ ] FCM data message для входящего звонка (mobile); desktop — in-app / local notification
 - [ ] **Groups _ Call / Video Calling**
 
+
+
 ### 6.4. Push-уведомления
 
 - [ ] FCM token → `users/{uid}/devices/{deviceId}`
@@ -332,11 +407,15 @@
 - [ ] Cloud Function: push при новом message (respect mute)
 - [ ] Tap notification → open chat (учитывать master–detail на wide)
 
+
+
 ### 6.5. Chat customization
 
 - [ ] **Custom Color Chat** → `members.customColor`
 - [ ] **Custom Background Chat** → upload + `members.customBackgroundUrl`
 - [ ] **Protected Chat** — флаг `chats.isProtected` (UI; E2E — отдельный спринт)
+
+
 
 ### 6.6. Moderation
 
@@ -345,6 +424,8 @@
 - [ ] Rules: blocked user cannot send messages
 
 ---
+
+
 
 ## Фаза 7 — Adaptive polish & multi-platform
 
@@ -358,11 +439,15 @@
 - [ ] Scrollbars и mouse wheel в списках и ленте
 - [ ] Минимальные размеры окна (desktop)
 
+
+
 ### 7.2. Visual QA по breakpoints
 
 - [ ] Пройти ключевые экраны: Auth, Chats shell, Thread, Groups, Profile, More
 - [ ] Golden / screenshot: phone, tablet, desktop для shell + chats
 - [ ] Empty / loading / error states во всех панелях master–detail
+
+
 
 ### 7.3. Платформенная готовность
 
@@ -371,6 +456,8 @@
 - [ ] File picker / share / notifications — абстракции в `shared/services`, не в dumb UI
 
 ---
+
+
 
 ## Фаза 8 — Релиз
 
@@ -384,6 +471,8 @@
 - [ ] `flutter analyze` — 0 issues
 - [ ] Обработка offline / retry (NetworkFailure)
 
+
+
 ### 8.2. UX polish
 
 - [ ] Dark Mode — все экраны (89+89 из Figma) на всех ширинах
@@ -391,104 +480,11 @@
 - [ ] Локализация `en` + `ru` (intl)
 - [ ] Анимации переходов; на wide — без лишних full-screen transitions
 
+
+
 ### 8.3. Production Firebase
 
 - [ ] SHA-1/SHA-256 release keystore в Console
 - [ ] Firestore rules review
 - [ ] Storage quotas, lifecycle rules
 - [ ] Crashlytics / Analytics (опционально)
-
-### 8.4. Сборка и дистрибуция
-
-- [ ] Android: signing config, `appbundle`
-- [ ] iOS: capabilities, App Store Connect
-- [ ] Desktop: MSIX / DMG / AppImage или выбранный канал
-- [ ] Store / сайт: скриншоты phone + tablet + desktop
-- [ ] Internal testing → closed beta
-
----
-
-## Фаза 9 — Backlog (COMING SOON)
-
-Функции из Figma **More** без готовых экранов — после MVP.
-
-| # | Задача | Приоритет |
-| --- | --- | --- |
-| 9.1 | Smart Replies | низкий |
-| 9.2 | Chat Bots | низкий |
-| 9.3 | Game Onlines | низкий |
-| 9.4 | Live Translation | средний |
-| 9.5 | Scheduled Messages | средний |
-| 9.6 | Anonymous Chat Rooms | низкий |
-| 9.7 | Community / Marketplace | низкий |
-| 9.8 | Dating | низкий |
-| 9.9 | AR Chat | низкий |
-| 9.10 | End-to-end encryption (Protected Chat) | высокий (security) |
-| 9.11 | Stories (если добавят в дизайн) | низкий |
-| 9.12 | Multi-window / pop-out chat (desktop) | низкий |
-
----
-
-## Рекомендуемый порядок (спринты)
-
-| Спринт | Фазы | Фокус |
-| --- | --- | --- |
-| 1 | 0 + 1 | Каркас, adaptive shell, smart/dumb, Firebase |
-| 2 | 2 | Auth end-to-end (phone + wide forms) |
-| 3 | 3 | Chats 1:1 + master–detail |
-| 4 | 4 | Groups + split view |
-| 5 | 5 | Profile & More |
-| 6 | 6 | Медиа, calls, push |
-| 7 | 7 | Adaptive polish, desktop/web |
-| 8 | 8 | Релиз |
-
----
-
-## Зависимости между фазами
-
-```mermaid
-flowchart LR
-  F0[Фаза 0\nФундамент + Adaptive]
-  F1[Фаза 1\nFirebase]
-  F2[Фаза 2\nAuth]
-  F3[Фаза 3\nChats + Split]
-  F4[Фаза 4\nGroups]
-  F5[Фаза 5\nProfile]
-  F6[Фаза 6\nРасширения]
-  F7[Фаза 7\nAdaptive polish]
-  F8[Фаза 8\nРелиз]
-  F9[Фаза 9\nBacklog]
-
-  F0 --> F1
-  F1 --> F2
-  F2 --> F3
-  F3 --> F4
-  F3 --> F5
-  F4 --> F6
-  F5 --> F6
-  F6 --> F7
-  F7 --> F8
-  F8 --> F9
-```
-
----
-
-## Связанные документы
-
-| Документ | Содержание |
-| --- | --- |
-| [architecture.md](./architecture.md) | Riverpod 3, Freezed, fpdart, smart/dumb, breakpoints |
-| [firebase-database.md](./firebase-database.md) | Коллекции и поля |
-| [firebase-flutter-connect.md](./firebase-flutter-connect.md) | Подключение Firebase к Flutter |
-| [firebase-setup.md](./firebase-setup.md) | Rules, Functions, Auth, Storage |
-| [firebase-events.md](./firebase-events.md) | Console, логи Functions, `snapshots()`, Analytics |
-
----
-
-## Трекинг прогресса
-
-Обновляйте чекбоксы в этом файле по мере выполнения. Для крупных задач создавайте issues в git с метками:
-
-`phase-0` … `phase-9`, `feature/auth`, `feature/chats`, `adaptive`, `platform/desktop`, `bug`, `docs`
-
-**Текущий статус проекта:** Фаза 0 (стартовый шаблон Flutter, документация готова; adaptive + smart/dumb зафиксированы в architecture). Страница регистрации задокументирована в [architecture.md §3.5](./architecture.md#35-пример-страница-регистрации-auth--register) и внесена в [roadmap §2.3](#23-feature-auth--login--register); реализация кода — следующий шаг.
