@@ -1,37 +1,50 @@
-# This file configures the analyzer, which statically analyzes Dart code to
-# check for errors, warnings, and lints.
-#
-# The issues identified by the analyzer are surfaced in the UI of Dart-enabled
-# IDEs (https://dart.dev/tools#ides-and-editors). The analyzer can also be
-# invoked from the command line by running `flutter analyze`.
-
-# The following line activates a set of recommended lints for Flutter apps,
-# packages, and plugins designed to encourage good coding practices.
-analyzer:
-  exclude:
-    - build/**
-    - android/**
-    - ios/**
-    - web/**
-    - windows/**
-    - macos/**
-    - linux/**
 include: package:flutter_lints/flutter.yaml
 
-linter:
-  # The lint rules applied to this project can be customized in the
-  # section below to disable rules from the `package:flutter_lints/flutter.yaml`
-  # included above or to enable additional rules. A list of all available lints
-  # and their documentation is published at https://dart.dev/lints.
-  #
-  # Instead of disabling a lint rule for the entire project in the
-  # section below, it can also be suppressed for a single line of code
-  # or a specific dart file by using the `// ignore: name_of_lint` and
-  # `// ignore_for_file: name_of_lint` syntax on the line or in the file
-  # producing the lint.
-  rules:
-    # avoid_print: false  # Uncomment to disable the `avoid_print` rule
-    # prefer_single_quotes: true  # Uncomment to enable the `prefer_single_quotes` rule
+# Плагин анализатора Riverpod (без custom_lint).
+# Версия должна быть совместима с riverpod_lint в pubspec.yaml.
+plugins:
+  riverpod_lint: ^3.1.9
 
-# Additional information about this file can be found at
-# https://dart.dev/guides/language/analysis-options
+analyzer:
+  exclude:
+    # Кэш Dart/Flutter — не анализируем.
+    - .dart_tool/**
+    # Артефакты сборки.
+    - build/**
+    # Codegen (json_serializable, riverpod_generator и т.п.).
+    - '**/*.g.dart'
+    # Codegen Freezed.
+    - '**/*.freezed.dart'
+  language:
+    # Запрещает неявные downcast'ы (Object → T без as).
+    strict-casts: true
+    # Требует явный тип, если его нельзя однозначно вывести.
+    strict-inference: true
+    # Запрещает «сырые» generic-типы без параметров (List вместо List<T>).
+    strict-raw-types: true
+  errors:
+    # Обязательный параметр не передан — ошибка, не warning.
+    missing_required_param: error
+    # Функция без return там, где он нужен — ошибка.
+    missing_return: error
+    # Freezed + json_serializable: @JsonKey и др. на полях дают ложные срабатывания.
+    invalid_annotation_target: ignore
+
+linter:
+  rules:
+    # Единый стиль строк: 'текст' вместо "текст".
+    prefer_single_quotes: true
+    # Запятая после последнего аргумента — удобнее diff и форматирование.
+    require_trailing_commas: true
+    # Не использовать print; для отладки — debugPrint / логгер.
+    avoid_print: true
+    # Предпочитать const-конструкторы, где возможно.
+    prefer_const_constructors: true
+    # const для литералов коллекций в const-контексте.
+    prefer_const_literals_to_create_immutables: true
+    # SizedBox вместо Container только для ширины/высоты.
+    sized_box_for_whitespace: true
+    # Key у виджетов с конструктором — стабильность в списках/дереве.
+    use_key_in_widget_constructors: true
+    # Не оборачивать в Container без нужды (padding/color/decoration).
+    avoid_unnecessary_containers: true
