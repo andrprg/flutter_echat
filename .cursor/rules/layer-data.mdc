@@ -1,0 +1,31 @@
+---
+description: Правила data-слоя — repositories impl, DTO, DataSources, Firebase
+globs:
+  - "**/features/**/data/**/*.dart"
+  - "**/shared/providers/**/*.dart"
+alwaysApply: false
+---
+
+# Data layer
+
+Реализует domain-контракты. Единственное место с Firebase SDK / local storage.
+
+## Содержимое
+
+- `datasources/` — Firestore / RTDB / Auth / SharedPreferences; `snapshots`/`onValue` только здесь
+- `dto/` — Freezed + `json_serializable`; маппинг **DTO → Entity только в data**
+- `repositories/*_impl.dart` — `TaskEither.tryCatch` / `TaskEither.Do` → `Either<Failure, T>`; сырые исключения наружу не пробрасывать
+
+## Providers
+
+```dart
+@Riverpod(keepAlive: true)
+ChatRepository chatRepository(Ref ref) => ChatRepositoryImpl(...);
+```
+
+## DO / DON'T
+
+- DO: оборачивать ошибки в sealed `Failure`; цепочки 2+ шагов — `TaskEither.Do` / `Either.Do`
+- DON'T: виджеты, Notifiers, `BuildContext`, знание breakpoints
+- DON'T: оставлять `FirebaseFirestore.instance` доступным presentation-слою
+---

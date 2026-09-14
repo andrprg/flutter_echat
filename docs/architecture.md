@@ -1140,16 +1140,22 @@ dart run build_runner watch --delete-conflicting-outputs
 
 ### 12.3. `analysis_options.yaml`
 
-Подключите lint для Riverpod:
+Подключите `riverpod_lint` **3.1+** как analyzer plugin (**без** `custom_lint`). Полная инструкция: [analysis-options-riverpod-lint.md](./analysis-options-riverpod-lint.md).
 
 ```yaml
-analyzer:
-  plugins:
-    - custom_lint
+# pubspec.yaml — dev_dependencies
+riverpod_lint: ^3.1.8
 
-dev_dependencies:
-  custom_lint: ^0.7.0
-  riverpod_lint: ^3.0.0
+# analysis_options.yaml — plugins на верхнем уровне файла
+include: package:flutter_lints/flutter.yaml
+
+plugins:
+  riverpod_lint: 3.1.8
+
+analyzer:
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
 ```
 
 ---

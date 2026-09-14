@@ -1,0 +1,56 @@
+---
+description: Riverpod 3 — только codegen-аннотации, типы провайдеров, Notifier
+globs:
+  - "**/*_controller.dart"
+  - "**/*_provider.dart"
+  - "**/features/**/presentation/**/*_screen.dart"
+  - "**/app/**/*.dart"
+  - "**/shared/providers/**/*.dart"
+  - "**/lib/main.dart"
+alwaysApply: false
+---
+
+# Riverpod 3
+
+Источник: `docs/architecture.md` §6, шпаргалка `docs/dart-riverpod.md`.
+
+## Обязательно
+
+- Только `@riverpod` / `@Riverpod` + `riverpod_generator`
+- В каждом файле с аннотациями: `part '{file}.g.dart';`
+- После изменений провайдеров: `dart run build_runner build --delete-conflicting-outputs`
+
+## Выбор типа
+
+| Задача | Как |
+| --- | --- |
+| Repository / Firebase / singleton | `@Riverpod(keepAlive: true)` function |
+| Stream данных | `@riverpod` → `Stream<...>` |
+| Async экран / загрузка | `@riverpod` class → `AsyncNotifier` |
+| Синхронный UI state (форма) | `@riverpod` class → `Notifier` |
+| Параметр (chatId и т.п.) | `@riverpod` с аргументами |
+
+```dart
+@Riverpod(keepAlive: true)
+ChatRepository chatRepository(Ref ref) => ChatRepositoryImpl(...);
+
+@riverpod
+class ChatListController extends _$ChatListController {
+  @override
+  Future<ChatListState> build() async { ... }
+}
+```
+
+## Smart UI
+
+- `ConsumerWidget` / `ConsumerStatefulWidget`
+- Данные: `ref.watch`; действия: `ref.read(...notifier)` / `ref.invalidate`
+- Either в Notifier → `fold` в state / `AsyncValue.error` с `Failure`
+
+## DON'T
+
+- Ручной `Provider(...)` / `FutureProvider(...)` / `StreamProvider(...)` без codegen
+- `StateNotifier` / `ChangeNotifier` для новых фич
+- `ref.watch` в dumb (`*_view.dart`, shared widgets)
+- Отдельный Notifier на phone/tablet/desktop
+---

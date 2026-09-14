@@ -1,0 +1,37 @@
+---
+description: Правила domain-слоя — entities, repository interfaces, failures
+globs:
+  - "**/features/**/domain/**/*.dart"
+  - "**/core/error/**/*.dart"
+alwaysApply: false
+---
+
+# Domain layer
+
+Чистый Dart: Freezed + fpdart. **Без** Flutter, Firebase, Riverpod, widgets.
+
+## Содержимое
+
+- `entities/` — immutable Freezed-модели домена
+- `repositories/` — только **interfaces** (абстрактные классы)
+- Failures — sealed Freezed hierarchy (`core/error/failures.dart`)
+
+## Контракты репозиториев
+
+```dart
+// ✅
+abstract class ChatRepository {
+  Stream<Either<Failure, List<Chat>>> watchChats();
+  Future<Either<Failure, Unit>> sendMessage({...});
+}
+
+// ❌ Firebase types, DTO, Map<String, dynamic> в сигнатурах
+```
+
+## DO / DON'T
+
+- DO: Freezed entities; API на `Either<Failure, T>` / `Stream<Either<...>>`
+- DO: `Option<T>` для опциональных полей domain (avatar, draft); ошибки — только `Failure`
+- DON'T: `dynamic`, raw JSON maps, импорты `cloud_firestore` / `firebase_auth`
+- DON'T: UI state и presentation-модели — они в `presentation/`
+---
