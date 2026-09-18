@@ -70,7 +70,7 @@
 ### 0.3. UI / Design system (dumb)
 
 - [x] Перенести цвета E-Chat из Figma (Blue `#1565C0`, Light Blue `#40C4FF`, …)
-- [ ] Подключить шрифт **Roboto** (Google Fonts)
+- [x] Подключить шрифт **Roboto** (Google Fonts)
 - [ ] Базовые **dumb**-компоненты: `TChatButton`, `TTextField`, `TAppBar`, `TAvatar`
 - [x] Тема Light / Dark (`TAppTheme` + `widget_themes` по макету)
 - [x] Density / spacing tokens с учётом desktop (`TSizes` pane widths, `maxContentWidth`) — [layouts-tablet-desktop.md](./layouts-tablet-desktop.md), [mockups](./mockups/echat-tablet-desktop.html), [coverage](./mockups/coverage-vs-figma.md)
