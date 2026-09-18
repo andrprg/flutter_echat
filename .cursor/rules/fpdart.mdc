@@ -5,7 +5,7 @@ globs:
   - "**/features/**/domain/**/*.dart"
   - "**/features/**/application/**/*.dart"
   - "**/features/**/presentation/**/*_controller.dart"
-  - "**/core/error/**/*.dart"
+  - "**/utils/exceptions/**/*.dart"
 alwaysApply: false
 ---
 

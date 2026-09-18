@@ -124,7 +124,7 @@ dependencies:
 Для E-Chat добавьте пакеты по мере разработки экранов:
 
 ```yaml
-  firebase_auth: ^5.5.2          # Login / OTP
+  firebase_auth: ^5.5.2          # Login
   cloud_firestore: ^5.6.6        # чаты, сообщения, профиль
   firebase_database: ^11.3.4     # online, typing
   firebase_storage: ^12.4.4      # аватары, медиа
@@ -219,7 +219,7 @@ cd ..
 flutter run -d ios
 ```
 
-Для **Phone Auth** на iOS позже понадобятся Push Notifications и APNs key — см. [firebase-setup.md §7](./firebase-setup.md#7-authentication-телефон--otp).
+Для **Phone Auth** на iOS позже понадобятся Push Notifications и APNs key — см. [firebase-setup.md §7](./firebase-setup.md#7-authentication-телефон).
 
 ---
 
@@ -332,6 +332,7 @@ Firebase **подключён** к Flutter, когда есть:
 | Шаг | Документ |
 | --- | --- |
 | Phone Auth, Firestore, Storage, FCM, rules | [firebase-setup.md](./firebase-setup.md) |
+| Регистрация (Phone Auth + `users`) | [firebase-registration.md](./firebase-registration.md) |
 | Коллекции и поля | [firebase-database.md](./firebase-database.md) |
 | Отслеживание событий | [firebase-events.md](./firebase-events.md) |
 
@@ -340,7 +341,7 @@ Firebase **подключён** к Flutter, когда есть:
 1. В Console включить **Authentication → Phone**
 2. Создать **Firestore** и **Storage**
 3. Задеплоить rules: `firebase deploy --only firestore:rules,storage`
-4. Реализовать экраны Login → OTP → Profile
+4. Реализовать экраны Login → Profile
 
 ---
 
@@ -382,5 +383,6 @@ cd ios && pod install && cd ..
 - [Официальная документация: Add Firebase to Flutter](https://firebase.google.com/docs/flutter/setup)
 - [FlutterFire CLI](https://firebase.google.com/docs/flutter/setup#install-cli)
 - [firebase-setup.md](./firebase-setup.md) — настройка сервисов под E-Chat
+- [firebase-registration.md](./firebase-registration.md) — регистрация Phone Auth + профиль
 - [firebase-database.md](./firebase-database.md) — структура Firestore
 - [firebase-events.md](./firebase-events.md) — Console, логи Functions, Analytics

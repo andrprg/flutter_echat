@@ -4,8 +4,9 @@ globs:
   - "**/features/**/presentation/**/*.dart"
   - "**/shared/widgets/**/*.dart"
   - "**/shared/layouts/**/*.dart"
-  - "**/app/router/**/*.dart"
-  - "**/app/adaptive/**/*.dart"
+  - "**/utils/router/**/*.dart"
+  - "**/utils/providers/**/*.dart"
+  - "**/utils/constants/breakpoints.dart"
 alwaysApply: false
 ---
 
@@ -23,6 +24,7 @@ alwaysApply: false
 - `StatelessWidget` / `StatefulWidget` **без** `flutter_riverpod`
 - Только props + callbacks (`VoidCallback`, `ValueChanged`)
 - Не знает `WidgetRef`, Repository, Firebase, `AppBreakpoint`, `MediaQuery`-пороги
+- Кастомные виджеты (shared + feature tiles/bubbles): класс `T…` (`TChatButton`), файл `t_*.dart`
 
 ## Notifier (`*_controller.dart`) + state (`*_state.dart`)
 
@@ -32,17 +34,27 @@ alwaysApply: false
 
 ## Adaptive
 
-- Breakpoints только через `app/adaptive/` (`AppBreakpoint`: phone / tablet≥600 / desktop≥1024)
-- Layout-варианты — композиции dumb рядом со screen, не копии фич
+- Breakpoints только через `utils/constants/breakpoints.dart` + `appBreakpointProvider`
+  (`AppBreakpoint`: phone / tablet≥600 / desktop≥1024)
+- Layout-варианты — параметризация dumb-компонентов или общие обёртки (`TwoPane`), не копии фич
+- Выбор child: `ResponsiveBuilder` **или** `switch` по `ref.watch(appBreakpointProvider)`
 
 ```dart
-// ✅ Smart выбирает layout
+// ✅ Smart — ResponsiveBuilder (helper из app_breakpoint_provider.dart)
+return ResponsiveBuilder(
+  phone: FeatureView(isDense: false, ...),
+  tablet: FeatureView(isDense: true, ...),
+  desktop: FeatureView(isDense: true, ...),
+);
+
+// ✅ Smart — явный switch (если нужна доп. логика вокруг breakpoint)
+final breakpoint = ref.watch(appBreakpointProvider);
 return switch (breakpoint) {
-  AppBreakpoint.phone => PhoneLayout(child: view),
-  AppBreakpoint.tablet => TabletLayout(child: view),
-  AppBreakpoint.desktop => DesktopLayout(child: view),
+  AppBreakpoint.phone => FeatureView(isDense: false, ...),
+  AppBreakpoint.tablet => FeatureView(isDense: true, ...),
+  AppBreakpoint.desktop => FeatureView(isDense: true, ...),
 };
 
-// ❌ ref.watch в *_view.dart / shared widgets
+// ❌ ref.watch / ResponsiveBuilder в *_view.dart / shared widgets
 ```
 ---

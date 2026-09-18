@@ -2,7 +2,7 @@
 description: Правила domain-слоя — entities, repository interfaces, failures
 globs:
   - "**/features/**/domain/**/*.dart"
-  - "**/core/error/**/*.dart"
+  - "**/utils/exceptions/**/*.dart"
 alwaysApply: false
 ---
 
@@ -14,7 +14,7 @@ alwaysApply: false
 
 - `entities/` — immutable Freezed-модели домена
 - `repositories/` — только **interfaces** (абстрактные классы)
-- Failures — sealed Freezed hierarchy (`core/error/failures.dart`)
+- Failures — sealed Freezed hierarchy (`utils/exceptions/failures.dart`)
 
 ## Контракты репозиториев
 

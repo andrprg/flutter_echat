@@ -6,7 +6,7 @@ alwaysApply: true
 # Правила команды (кратко)
 
 Полный источник: `docs/architecture.md` §14.
-Детали по стеку подключаются по файлам: `riverpod`, `freezed`, `fpdart`, `file-naming`, слои.
+Детали по стеку подключаются по файлам: `riverpod`, `freezed`, `fpdart`, `go-router`, `file-naming`, слои.
 
 ## DO
 
@@ -14,15 +14,20 @@ alwaysApply: true
 - Freezed для state, entity, failure, DTO (см. `freezed`)
 - `Either<Failure, T>` на границе domain ↔ data; цепочки 2+ — Do-нотация fpdart (см. `fpdart`)
 - `Option` для отсутствующих значений в domain; ошибки только через `Failure`
+- Навигация только через `go_router` (см. `go-router`)
 - Smart = Consumer*; Dumb = обычный Widget без Riverpod
-- Один controller на экран; layouts отдельно для форм-факторов
-- Breakpoints только через `appBreakpointProvider`
+- Пользовательские виджеты — класс с `T` (`TChatButton`), файл `t_*.dart` (см. `file-naming`)
+- Один controller на экран; адаптивность через параметризацию dumb-view или общие обёртки
+- Breakpoints только через `appBreakpointProvider` (`utils/constants` + `utils/providers`)
+- Выбор layout в smart: `ResponsiveBuilder` или `switch` по `AppBreakpoint`
 
 ## DON'T
 
 - Ручные `Provider`/`FutureProvider` без codegen; `StateNotifier`/`ChangeNotifier` для новых фич
+- `auto_route` / ручной `Navigator` для feature-маршрутов вместо `go_router`
 - `Firebase*.instance` / SDK в виджетах и `presentation/`
 - `ref` / `WidgetRef` в dumb (`*_view.dart`, shared widgets)
+- Кастомные виджеты без префикса `T` / файла `t_` (`ChatButton`, `EChatButton`)
 - Отдельные Notifier или копии фич «для tablet/desktop»
 - `setState` для бизнес-логики; мутабельный UI/domain state вместо Freezed
 - `dynamic` / `Map<String, dynamic>` в domain и presentation

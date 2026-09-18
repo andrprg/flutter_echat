@@ -3,6 +3,7 @@
 Пошаговая инструкция по настройке сервисов Firebase для **flutter_echat** в соответствии со [структурой базы данных](./firebase-database.md).
 
 > **Подключение Flutter.** Если Firebase ещё не связан с приложением, начните с [firebase-flutter-connect.md](./firebase-flutter-connect.md).  
+> **Регистрация.** Auth → `users` / `userSettings`: [firebase-registration.md](./firebase-registration.md).  
 > **События.** Как отслеживать записи в Firestore, логи Functions и Analytics: [firebase-events.md](./firebase-events.md).
 
 ---
@@ -15,7 +16,7 @@
 4. [Подключение Flutter-приложения](#4-подключение-flutter-приложения)
 5. [Зависимости Dart](#5-зависимости-dart)
 6. [Инициализация в коде](#6-инициализация-в-коде)
-7. [Authentication (телефон + OTP)](#7-authentication-телефон--otp)
+7. [Authentication](#7-authentication)
 8. [Cloud Firestore](#8-cloud-firestore)
 9. [Realtime Database](#9-realtime-database)
 10. [Cloud Storage](#10-cloud-storage)
@@ -31,14 +32,14 @@
 
 | Сервис Firebase | Зачем (по схеме E-Chat) |
 | --- | --- |
-| **Authentication** | Login / Register по номеру телефона и OTP |
+| **Authentication** | Login / Register |
 | **Cloud Firestore** | `users`, `chats`, `messages`, `calls`, `contacts`, … |
 | **Realtime Database** | Online / last seen, индикатор «печатает» |
 | **Cloud Storage** | Аватары, фото, видео, голосовые, файлы, фоны чатов |
 | **Cloud Messaging** | Push-уведомления (сообщения, звонки) |
 | **Cloud Functions** | `lastMessage`, `unreadCount`, FCM, профиль при регистрации |
 
-Billing (Blaze plan) понадобится для **Cloud Functions** и исходящих SMS OTP в production. Для разработки OTP можно тестировать через [тестовые номера](https://firebase.google.com/docs/auth/android/phone-auth#test-with-whitelisted-phone-numbers) на бесплатном плане Spark.
+Billing (Blaze plan) понадобится для **Cloud Functions** в production.
 
 ---
 
@@ -230,7 +231,7 @@ abstract final class FirestorePaths {
 
 ---
 
-## 7. Authentication (телефон + OTP)
+## 7. Authentication
 
 ### 7.1. Console
 
@@ -260,7 +261,7 @@ cd android
 ```
 Login _ Empty / Sign Up _ Empty
     → verifyPhoneNumber(phone)
-Login _ OTP * / Sign Up _ OTP *
+Login / Sign Up
     → signInWithCredential(PhoneAuthProvider.credential)
 Sign Up _ User Information
     → создать документ users/{uid} + userSettings/{uid}
@@ -268,7 +269,7 @@ Set Face ID / Touch ID / PIN
     → только локально + флаги faceIdEnabled, pinEnabled в users
 ```
 
-Пример отправки OTP:
+Пример вызова:
 
 ```dart
 await FirebaseAuth.instance.verifyPhoneNumber(
@@ -280,7 +281,7 @@ await FirebaseAuth.instance.verifyPhoneNumber(
     // UI: Code Invalid
   },
   codeSent: (verificationId, forceResendingToken) {
-    // UI: Enter OTP Code, Resend Code
+    // UI: Login
   },
   codeAutoRetrievalTimeout: (verificationId) {},
 );
@@ -314,6 +315,8 @@ await FirebaseFirestore.instance.collection('users').doc(uid).set({
 ```
 
 Документ `userSettings/{uid}` лучше создавать **Cloud Function** при регистрации (см. §12), либо с клиента с теми же дефолтами, что в [§5.2](./firebase-database.md#52-usersettingsuserid).
+
+Полная реализация регистрации по слоям (domain / DataSource / repository / UI / guard): [firebase-registration.md](./firebase-registration.md).
 
 ---
 
@@ -861,7 +864,7 @@ firebase deploy --only functions
 Чеклист:
 
 - [ ] `flutter run` — приложение стартует без ошибки `Firebase.initializeApp`
-- [ ] Phone Auth: тестовый номер → OTP → пользователь в **Authentication**
+- [ ] Auth: тестовый пользователь → пользователь в **Authentication**
 - [ ] После регистрации есть документы `users/{uid}` и `userSettings/{uid}`
 - [ ] Создание личного чата: `chatId = sorted(uids).join('_')`
 - [ ] Отправка сообщения → документ в `messages`, обновление `chats.lastMessage`
@@ -872,7 +875,7 @@ firebase deploy --only functions
 
 Быстрая проверка Firestore из Console: **Firestore → Data** — должны появиться коллекции после действий в приложении.
 
-Как смотреть каждое действие (сообщение, OTP, typing, логи функций) — [firebase-events.md](./firebase-events.md).
+Как смотреть каждое действие (сообщение, typing, логи функций) — [firebase-events.md](./firebase-events.md).
 
 ---
 
@@ -884,7 +887,6 @@ firebase deploy --only functions
 | Phone Auth `invalid-app-credential` | Добавьте SHA-1/SHA-256 в Firebase Console |
 | `PERMISSION_DENIED` в Firestore | Проверьте `firestore.rules`, авторизован ли пользователь |
 | Запрос чатов без индекса | Выполните `firebase deploy --only firestore:indexes` |
-| iOS OTP не приходит | APNs key, Push capability, реальное устройство (не все симуляторы) |
 | `unreadCount` не обновляется | Реализуйте Cloud Function; клиент не может писать поле (rules) |
 | Storage upload denied | Проверьте `storage.rules` и размер/тип файла |
 
@@ -899,6 +901,7 @@ firebase deploy --only functions
 ## Связанные документы
 
 - [Структура базы данных E-Chat](./firebase-database.md) — поля коллекций, индексы, MVP
+- [Регистрация в Firebase](./firebase-registration.md) — Phone Auth, профиль, слои приложения
 - [Отслеживание событий Firebase](./firebase-events.md) — Console, Functions Logs, Analytics
 - [Подключение Flutter](./firebase-flutter-connect.md) — `flutterfire configure`, `main.dart`
 - [FlutterFire documentation](https://firebase.google.com/docs/flutter/setup)
@@ -909,7 +912,7 @@ firebase deploy --only functions
 ## Рекомендуемый порядок работ
 
 1. `flutterfire configure` + зависимости + `main.dart`
-2. Phone Auth + создание `users` / `userSettings`
+2. Phone Auth + создание `users` / `userSettings` — [firebase-registration.md](./firebase-registration.md)
 3. Firestore rules + indexes
 4. Чаты и сообщения (MVP Chats / Groups)
 5. RTDB presence + typing

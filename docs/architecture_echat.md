@@ -8,7 +8,7 @@
 | **Freezed** | Immutable-модели, union types, `copyWith` |
 | **fpdart** | Функциональная обработка ошибок (`Either`, `Option`, `TaskEither`) |
 
-Связанные документы: [firebase-database.md](./firebase-database.md), [firebase-setup.md](./firebase-setup.md), [firebase-flutter-connect.md](./firebase-flutter-connect.md), [firebase-events.md](./firebase-events.md).
+Связанные документы: [firebase-database.md](./firebase-database.md), [firebase-setup.md](./firebase-setup.md), [firebase-registration.md](./firebase-registration.md), [firebase-flutter-connect.md](./firebase-flutter-connect.md), [firebase-events.md](./firebase-events.md).
 
 Шпаргалки по стеку: [dart-riverpod.md](./dart-riverpod.md), [dart-fpdart.md](./dart-fpdart.md), [dart-freezed.md](./dart-freezed.md), [dart-classes.md](./dart-classes.md), [dart-future.md](./dart-future.md), [dart-stream.md](./dart-stream.md), [dart-map-enum.md](./dart-map-enum.md).
 
@@ -40,7 +40,7 @@
 3. **Immutable state** — состояние экрана и доменные модели только через Freezed.
 4. **Явные ошибки** — публичные методы репозиториев возвращают `Future<Either<Failure, T>>`, не бросают исключения наружу.
 5. **Smart / Dumb** — умный контейнер подписывается на Riverpod и передаёт данные/колбэки; глупые виджеты только рисуют UI (см. [§3](#3-умный--глупый-компонент)).
-6. **Один Notifier — много раскладок** — phone / tablet / desktop делят один controller и state; отличается только компоновка глупых виджетов.
+6. **Один Notifier — много раскладок** — phone / tablet / desktop делят один controller и state подфичи; отличается только компоновка глупых виджетов. Если на wide рядом два экрана (list + thread) — **smart-shell** компонует dumb из разных подпапок, не сливая Notifier’ы ([§4.3](#43-masterdetail-chats--groups)).
 7. **Firebase изолирован** — прямых вызовов Firestore/Auth из `presentation` нет. Подписки (`snapshots`, `onValue`) только в DataSource; как отлаживать события — [firebase-events.md](./firebase-events.md).
 
 **Целевые форм-факторы:** phone (портрет), tablet (≥600 dp), desktop / wide (≥1024 dp, Windows / macOS / web / large tablet landscape).
@@ -108,18 +108,18 @@ Breakpoint / WindowSize
           │ props + callbacks
           ▼
 ┌───────────────────┐
-│  Dumb layouts     │  ChatListPhoneView / TabletView / DesktopView
-│  + shared widgets │  ChatListTile, ChatBubble, …
+│  Dumb views       │  ChatListView (с параметрами)
+│  + shared widgets │  TChatListTile, TChatBubble, …
 └───────────────────┘
 ```
 
 ### 3.3. Правила
 
-1. **Один smart на route/feature-экран** — точка входа в фичу; внутри — только orchestration.
+1. **Один smart на route/feature-экран** — точка входа; внутри — только orchestration. Для master–detail (list + thread на одном wide-экране) точка входа — **smart-shell** (`ChatsShellScreen`), который компонует dumb из разных подпапок (§4.3).
 2. **Dumb не импортирует `flutter_riverpod`** — тестируется `pumpWidget` без `ProviderScope`.
-3. **Shared dumb** живут в `shared/widgets/` или `feature/.../widgets/`; layout-варианты — рядом со screen в `layouts/` или как отдельные `*_view.dart`.
-4. **Не плодить Notifier на форм-фактор** — `ChatListController` один; phone и desktop получают один и тот же `ChatListState`.
-5. **Колбэки вместо side-effects в dumb** — `onChatTap(chatId)`, `onSend(text)`; навигацию и snackbar делает smart.
+3. **Shared dumb** живут в `src/shared/widgets/` или `feature/.../widgets/`; параметры адаптивности передаются во `*_view.dart`; split — `TwoPane` / `ThreePane` в `shared/layouts/`.
+4. **Не плодить Notifier на форм-фактор** — `ChatListController` / `ChatThreadController` по одному на подфичу; phone и desktop получают те же state. Не сливать list+thread в один Notifier «для desktop».
+5. **Колбэки вместо side-effects в dumb** — `onChatTap(chatId)`, `onSend(text)`; навигацию и snackbar делает smart / shell.
 
 ### 3.4. Пример
 
@@ -140,18 +140,18 @@ class ChatListScreen extends ConsumerWidget {
         onRetry: () => ref.invalidate(chatListControllerProvider),
       ),
       data: (state) {
-        final view = ChatListView(
+        // Или ResponsiveBuilder(phone: …, tablet: …, desktop: …) — §4.1.1
+        // В нашем варианте просто параметризуем View
+        return ChatListView(
           state: state,
+          isDense: breakpoint != AppBreakpoint.phone,
+          contentPadding: breakpoint == AppBreakpoint.phone
+              ? const EdgeInsets.symmetric(horizontal: 16)
+              : const EdgeInsets.symmetric(horizontal: 24),
           onSearchChanged: (q) =>
               ref.read(chatListControllerProvider.notifier).setSearchQuery(q),
           onChatTap: (id) => ref.read(appRouterProvider).go('/chats/$id'),
         );
-
-        return switch (breakpoint) {
-          AppBreakpoint.phone => ChatListPhoneLayout(child: view),
-          AppBreakpoint.tablet => ChatListTabletLayout(child: view),
-          AppBreakpoint.desktop => ChatListDesktopLayout(child: view),
-        };
       },
     );
   }
@@ -164,11 +164,15 @@ class ChatListView extends StatelessWidget {
     required this.state,
     required this.onSearchChanged,
     required this.onChatTap,
+    this.isDense = false,
+    this.contentPadding = const EdgeInsets.all(16),
   });
 
   final ChatListState state;
   final ValueChanged<String> onSearchChanged;
   final ValueChanged<String> onChatTap;
+  final bool isDense;
+  final EdgeInsets contentPadding;
 
   @override
   Widget build(BuildContext context) {
@@ -219,7 +223,7 @@ class RegisterController extends _$RegisterController {
     state = state.copyWith(isSubmitting: false);
     result.fold(
       (failure) => state = state.copyWith(error: failure),
-      (_) => ref.read(appRouterProvider).go('/otp'),
+      (_) => ref.read(appRouterProvider).go('/home'),
     );
   }
 }
@@ -249,7 +253,9 @@ class RegisterScreen extends ConsumerWidget {
 
 **Dumb `RegisterView`** получает только `RegisterState` + колбэки: поля Name / Phone / Password, чекбокс Terms, кнопка Register, сообщение об ошибке из `state.error.displayMessage`. Без `WidgetRef`, без вызова repository (см. [§3.3](#33-правила)).
 
-**Правила:** на phone — full-height скролл-форма; на wide — центрированная колонка с `maxWidth`. Ошибки — только через sealed `Failure` (§10); переход после успеха — на `/otp`.
+**Правила:** на phone — full-height скролл-форма; на wide — центрированная колонка с `maxWidth`. Ошибки — только через sealed `Failure` (§10); переход после успеха — на `/home`.
+
+Вызов Firebase: не из smart/dumb, а через `AuthRepository` / DataSource — [firebase-registration.md](./firebase-registration.md).
 
 ---
 
@@ -265,6 +271,29 @@ class RegisterScreen extends ConsumerWidget {
 
 Источник ширины: `MediaQuery.sizeOf(context)` или `Window` (desktop/web). Значение публикуется как `@riverpod` `appBreakpointProvider`, чтобы smart-экраны не дублировали пороги.
 
+### 4.1.1. `ResponsiveBuilder`
+
+В том же файле `utils/providers/app_breakpoint_provider.dart` лежит smart-helper `ResponsiveBuilder` — `ConsumerWidget`, который читает `appBreakpointProvider` и возвращает нужный child.
+
+| Параметр | Обязателен | Fallback |
+| --- | --- | --- |
+| `phone` | да | — |
+| `tablet` | нет | `phone` |
+| `desktop` | нет | `tablet` → `phone` |
+
+```dart
+// utils/providers/app_breakpoint_provider.dart — использование в smart
+return ResponsiveBuilder(
+  phone: ChatListView(isDense: false, ...),
+  tablet: ChatListView(isDense: true, ...),
+  desktop: ChatListView(isDense: true, ...),
+);
+```
+
+Эквивалент вручную: `ref.watch(appBreakpointProvider)` + `switch` (см. §3.4, §4.6). Оба способа допустимы; `ResponsiveBuilder` удобен, когда нужна только смена child без дополнительной логики вокруг breakpoint.
+
+**Не использовать** в dumb (`*_view.dart`, `shared/widgets`) — helper сам подписан на Riverpod.
+
 ### 4.2. Navigation shell
 
 | Форм-фактор | Shell | Стек чатов |
@@ -277,7 +306,9 @@ class RegisterScreen extends ConsumerWidget {
 
 ### 4.3. Master–detail (chats / groups)
 
-На tablet/desktop список и переписка живут рядом:
+На phone список диалогов и переписка — **разные полноэкранные маршруты**. На tablet/desktop они должны быть **на одном экране рядом**, оставаясь в **разных подпапках** presentation (`chat_list/` и `chat_thread/`). Не склеивать две подфичи в один «супер-экран» и не копировать их в `tablet/` / `desktop/`.
+
+**Решение:** третий **smart-shell** только оркестрирует — подписывается на оба Notifier’а, читает breakpoint + `selectedChatId` из `go_router` и компонует уже готовые **dumb**-views.
 
 ```
 ┌────────┬──────────────┬─────────────────┬────────────┐
@@ -294,12 +325,134 @@ class RegisterScreen extends ConsumerWidget {
 └──────────────────────┘
 ```
 
-Smart-оболочка `ChatsShellScreen` смотрит `selectedChatId` + breakpoint и собирает раскладку из одних и тех же dumb: `ChatListView`, `ChatThreadView`.
+#### Роли файлов
+
+| Роль | Где | Что делает |
+| --- | --- | --- |
+| Список (колонка 1) | `presentation/chat_list/` | свой `ChatListController` + `ChatListState` + dumb `ChatListView` |
+| Переписка (колонка 2) | `presentation/chat_thread/` | свой `ChatThreadController` + `ChatThreadState` + dumb `ChatThreadView` |
+| Оболочка | `presentation/shell/chats_shell_screen.dart` | **SMART:** breakpoint + `selectedChatId` → phone stack или `TwoPane` / `ThreePane` |
+
+Оба контроллера остаются **отдельными** (не один «desktop-controller»). Dumb **не знает** про соседнюю колонку, Riverpod и breakpoints — только props + callbacks. Shell **не** содержит тяжёлую вёрстку списка/пузырей — только композицию.
+
+Структура (оба экрана — подфичи **одной** feature `chats`, не top-level features):
+
+```
+features/chats/presentation/
+├── shell/
+│   └── chats_shell_screen.dart   # SMART master–detail
+├── chat_list/
+│   ├── chat_list_view.dart       # DUMB
+│   ├── chat_list_controller.dart
+│   └── chat_list_state.dart
+└── chat_thread/
+    ├── chat_thread_view.dart     # DUMB
+    ├── chat_thread_controller.dart
+    └── chat_thread_state.dart
+```
+
+Тонкие `chat_list_screen.dart` / `chat_thread_screen.dart` допустимы как smart-обёртки для phone full-screen маршрутов; на tablet/desktop точку входа вкладки держит **`ChatsShellScreen`**, который сам маппит оба controller → dumb-views (см. §4.6, §4.8).
+
+#### Маршруты (общие для всех ширин)
+
+| Маршрут | Phone | Tablet / Desktop |
+| --- | --- | --- |
+| `/chats` | только `ChatListView` | `TwoPane(list \| empty placeholder)` |
+| `/chats/:id` | только `ChatThreadView` (push) | `TwoPane(list \| ChatThreadView)` — список **не** уезжает |
+
+```dart
+// chats_shell_screen.dart — SMART-композитор
+class ChatsShellScreen extends ConsumerWidget {
+  const ChatsShellScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final listAsync = ref.watch(chatListControllerProvider);
+    final threadAsync = ref.watch(chatThreadControllerProvider);
+    final breakpoint = ref.watch(appBreakpointProvider);
+    final chatId = GoRouterState.of(context).pathParameters['id'];
+
+    final list = listAsync.when(
+      loading: () => const ChatListShimmer(),
+      error: (e, _) => ErrorView(
+        message: (e as Failure).displayMessage,
+        onRetry: () => ref.invalidate(chatListControllerProvider),
+      ),
+      data: (state) => ChatListView(
+        state: state,
+        onChatTap: (id) => context.go('/chats/$id'),
+        onSearchChanged: (q) =>
+            ref.read(chatListControllerProvider.notifier).setSearchQuery(q),
+      ),
+    );
+
+    final thread = chatId == null
+        ? const EmptyChatPlaceholder()
+        : threadAsync.when(
+            loading: () => const ChatThreadShimmer(),
+            error: (e, _) => ErrorView(
+              message: (e as Failure).displayMessage,
+              onRetry: () => ref.invalidate(chatThreadControllerProvider),
+            ),
+            data: (state) => ChatThreadView(
+              state: state,
+              onSend: (text) =>
+                  ref.read(chatThreadControllerProvider.notifier).send(text),
+            ),
+          );
+
+    return switch (breakpoint) {
+      AppBreakpoint.phone =>
+        chatId == null ? list : thread, // один child на весь экран
+      AppBreakpoint.tablet || AppBreakpoint.desktop =>
+        TwoPane(master: list, detail: thread),
+    };
+  }
+}
+```
+
+#### Как `ChatsShellScreen` выбирает phone / tablet / desktop
+
+Краткий ответ: **не** отдельными файлами «для mobile/tablet/desktop», а одним smart-shell по двум входам — `appBreakpointProvider` и route (`chatId`).
+
+**1. Откуда берётся форм-фактор**
+
+Ширина окна → `AppBreakpoint` через `appBreakpointProvider` (пороги в `TBreakpoints` / `appBreakpointFromWidth`):
+
+| `AppBreakpoint` | Ширина (dp) |
+| --- | --- |
+| `phone` | &lt; 600 |
+| `tablet` | 600 … 1023 |
+| `desktop` | ≥ 1024 |
+
+Smart-экраны **не** читают пороги из `MediaQuery` напрямую — только `ref.watch(appBreakpointProvider)`. Dumb (`*_view`) breakpoints **не знает**.
+
+**2. Что читает shell**
+
+| Вход | Откуда | Зачем |
+| --- | --- | --- |
+| Breakpoint | `appBreakpointProvider` | phone stack vs `TwoPane` / `ThreePane` |
+| Выбранный чат | `GoRouterState.pathParameters['id']` | list vs thread (phone) или empty vs thread (detail) |
+| Данные списка | `chatListControllerProvider` | props → `ChatListView` |
+| Данные переписки | `chatThreadControllerProvider` | props → `ChatThreadView` |
+
+**3. Что возвращает `switch`**
+
+| Breakpoint | `/chats` (`chatId == null`) | `/chats/:id` |
+| --- | --- | --- |
+| `phone` | только `ChatListView` | только `ChatThreadView` (один child на весь экран) |
+| `tablet` / `desktop` | `TwoPane(list \| EmptyChatPlaceholder)` | `TwoPane(list \| ChatThreadView)` — список **остаётся** |
+
+На phone и wide **одни и те же** controllers и dumb-views; отличается только композиция оболочки. Для desktop с info-pane shell может отдать `ThreePane` вместо `TwoPane` — выбор по-прежнему в smart-shell по `AppBreakpoint` (см. §4.6).
+
+Развёрнутый разбор потока и схемы — [§4.6](#46-практический-разбор-как-выбирается-верстка-на-примере-featurechats).
+
+Тот же паттерн для `groups`: `GroupsShellScreen` + `GroupListView` + переиспользование `ChatThreadView` (или `GroupThreadView`). Layout-обёртки `TwoPane` / `ThreePane` — dumb в `src/shared/layouts/`.
 
 ### 4.4. Что не адаптировать отдельно
 
 - Domain, Data, Notifiers, Failure — **форм-фактор-агностичны**.
-- Auth OTP, мелкие модалки — часто один layout с `ConstrainedBox` / `maxWidth` на desktop.
+- Мелкие формы, модалки — часто один layout с `ConstrainedBox` / `maxWidth` на desktop.
 - Тема, локализация, design tokens — общие; меняются spacing / density / max content width.
 
 ### 4.5. Платформы
@@ -311,45 +464,53 @@ Smart-оболочка `ChatsShellScreen` смотрит `selectedChatId` + brea
 | Windows / macOS / Linux | desktop layout |
 | Web | breakpoints по ширине окна |
 
-Firebase / WebRTC / file picker могут отличаться по платформе в **Data** или `shared/services`, не в dumb-виджетах.
+Firebase / WebRTC / file picker могут отличаться по платформе в **Data** или `src/utils/device/`, не в dumb-виджетах.
 
 ### 4.6. Практический разбор: как выбирается верстка на примере feature/chats
 
-Ниже — сквозной ответ на вопрос «как и где выбирается верстка для phone / tablet / desktop», привязанный к фиче `chats`. Этот раздел описывает **целевую структуру**: в текущем коде существует только `lib/main.dart`, а `features/chats/` и `app/adaptive/` предстоит реализовать по этому плану.
+Ниже — сквозной ответ на вопрос «как и где выбирается верстка для phone / tablet / desktop», привязанный к фиче `chats`. Этот раздел описывает **целевую структуру**: каркас — `lib/src/` (`app.dart`, `utils/`, `features/`, `shared/`); фичу `chats` предстоит реализовать по этому плану.
 
 #### 1. Где живут breakpoints и как определяется форм-фактор
 
-Единая точка правды для порогов — папка `app/adaptive/`:
+Единая точка правды для порогов — `src/utils/constants/` + провайдер в `src/utils/providers/`:
 
 | Файл | Что делает |
 | --- | --- |
-| `app/adaptive/breakpoints.dart` | `enum AppBreakpoint { phone, tablet, desktop }` + сами пороги |
-| `app/adaptive/app_breakpoint_provider.dart` | `@riverpod appBreakpointProvider` — публикует текущее значение `AppBreakpoint` |
-| `app/adaptive/responsive_builder.dart` | optional helper, только для smart-слоя |
+| `utils/constants/breakpoints.dart` | `enum AppBreakpoint { phone, tablet, desktop }` + пороги `TBreakpoints` |
+| `utils/providers/app_breakpoint_provider.dart` | `@riverpod appBreakpointProvider` + smart-helper `ResponsiveBuilder` |
 
-Пороги: `phone` `< 600`, `tablet` `600 … 1023`, `desktop` `≥ 1024`. Источник ширины — `MediaQuery.sizeOf(context)` или `Window` на desktop/web. Провайдер пересчитывает это значение один раз; smart-экраны пороги не дублируют (прямой `MediaQuery` в фичах запрещён, см. §14 DON'T).
+Пороги: `phone` `< 600`, `tablet` `600 … 1023`, `desktop` `≥ 1024`. Источник ширины — `MediaQuery.sizeOf(context)` или `Window` на desktop/web. Провайдер пересчитывает это значение один раз; smart-экраны пороги не дублируют (прямой `MediaQuery` в фичах запрещён, см. §14 DON'T). API `ResponsiveBuilder` — в [§4.1.1](#411-responsivebuilder).
 
 #### 2. Кто выбирает верстку — Smart-экран
 
-Выбор делает **smart**-компонент через `switch` по breakpoint — это суть принципа «Один Notifier — много раскладок» (§1 п.6, §3.3 п.4): controller и state общие, отличается только компоновка глупых виджетов.
+Выбор делает **smart**-компонент по breakpoint — это суть принципа «Один Notifier — много раскладок» (§1 п.6, §3.3 п.4): controller и state общие, отличается только компоновка глупых виджетов. Два равноправных способа:
 
 ```dart
-// features/chats/presentation/chat_list/chat_list_screen.dart
-final breakpoint = ref.watch(appBreakpointProvider);
+// Вариант A — ResponsiveBuilder (предпочтительно, если нужен только child)
+return ResponsiveBuilder(
+  phone: ChatListView(isDense: false, ...),
+  tablet: ChatListView(isDense: true, ...),
+  desktop: ChatListView(isDense: true, ...),
+);
 
+// Вариант B — явный switch (когда вокруг breakpoint есть доп. логика)
+final breakpoint = ref.watch(appBreakpointProvider);
 return switch (breakpoint) {
-  AppBreakpoint.phone   => ChatListPhoneLayout(child: view),
-  AppBreakpoint.tablet  => ChatListTabletLayout(child: view),
-  AppBreakpoint.desktop => ChatListDesktopLayout(child: view),
+  AppBreakpoint.phone   => ChatListView(isDense: false, ...),
+  AppBreakpoint.tablet  => ChatListView(isDense: true, ...),
+  AppBreakpoint.desktop => ChatListView(isDense: true, ...),
 };
 ```
 
-Алгоритм для `chats`:
+Для **одиночного** экрана (только список или только форма) этого достаточно. Для **master–detail** (список + переписка) точка входа — `ChatsShellScreen` (§4.3): он выбирает не «обёртку вокруг одного view», а **композицию** двух dumb из разных подпапок.
 
-1. Smart-экран `ChatListScreen` подписывается на `chatListControllerProvider` (`AsyncValue<ChatListState>`) и на `appBreakpointProvider`.
-2. Внутри `asyncState.when(data: ...)` собирает **общий** dumb-view `ChatListView` с props + колбэками (`onSearchChanged`, `onChatTap`).
-3. По значению `breakpoint` оборачивает этот общий view в одну из трёх layout-обёрток.
-4. Навигацию делает smart: `onChatTap: (id) => ref.read(appRouterProvider).go('/chats/$id')`.
+Алгоритм для вкладки `chats`:
+
+1. Smart-shell `ChatsShellScreen` подписывается на `chatListControllerProvider` и `chatThreadControllerProvider` (два Notifier’а, не один).
+2. Собирает dumb `ChatListView` и `ChatThreadView` с props + колбэками (`onSearchChanged`, `onChatTap`, `onSend`).
+3. Читает `appBreakpointProvider` + `pathParameters['id']` из `go_router`.
+4. **Phone:** один child на весь экран — list (`/chats`) или thread (`/chats/:id`).
+5. **Tablet / Desktop:** `TwoPane(master: list, detail: thread | EmptyChatPlaceholder)`; навигация — `context.go('/chats/$id')` без ухода списка.
 
 #### 3. Где находятся сами верстки (для chats)
 
@@ -360,46 +521,49 @@ features/chats/presentation/
 ├── shell/
 │   └── chats_shell_screen.dart      # SMART: master–detail, собирает list + thread
 ├── chat_list/
-│   ├── chat_list_screen.dart        # SMART (или часть shell)
+│   ├── chat_list_screen.dart        # SMART (phone full-screen / тонкая обёртка)
 │   ├── chat_list_view.dart          # DUMB — список/поиск/empty state
 │   ├── chat_list_controller.dart    # один Notifier на все форм-факторы
 │   └── chat_list_state.dart
 ├── chat_thread/
-│   ├── chat_thread_screen.dart      # SMART
+│   ├── chat_thread_screen.dart      # SMART (phone full-screen / тонкая обёртка)
 │   ├── chat_thread_view.dart        # DUMB
 │   ├── chat_thread_controller.dart
 │   └── chat_thread_state.dart
-└── widgets/                         # DUMB feature-widgets (tiles, bubbles)
+└── widgets/                         # DUMB feature-widgets: TChatListTile, TChatBubble, …
 ```
 
-Layout-варианты лежат либо в `layouts/` рядом со screen, либо как отдельные `*_view.dart` — для chats это `ChatListPhoneLayout` / `ChatListTabletLayout` / `ChatListDesktopLayout`. Папки `mobile/`, `tablet/`, `desktop/` с копиями целых фич **не создаются** — только разные композиции одних dumb (§5). Переиспользуемые обёртки — в `shared/layouts/`: `MaxWidthBox`, `TwoPane`, `ThreePane`.
+Папки `mobile/`, `tablet/`, `desktop/` с копиями целых фич **не создаются** — только разные композиции одних dumb (§5). Переиспользуемые обёртки — в `src/shared/layouts/`: `MaxWidthBox`, `TwoPane`, `ThreePane`.
 
 Поведение по форм-фактору:
 
-- phone: одна колонка, список на весь экран, тап → full-screen thread.
-- tablet: `NavigationRail` слева + master–detail (список + переписка рядом).
-- desktop: широкий rail/sidebar + optional right pane (инфо о чате) + master–detail.
+- phone: одна колонка; `/chats` → list, `/chats/:id` → full-screen thread.
+- tablet: `NavigationRail` слева + master–detail (`TwoPane`: список + переписка).
+- desktop: широкий rail/sidebar + optional right pane (инфо о чате) + master–detail (`ThreePane` при необходимости).
 
-На tablet/desktop `ChatsShellScreen` собирает `TwoPane(list + ChatThreadView)` по `selectedChatId` + breakpoint (§4.3, §9).
+На tablet/desktop `ChatsShellScreen` собирает `TwoPane(list + thread)` по `selectedChatId` + breakpoint (§4.3, §9). Не объединять `chat_list` и `chat_thread` в один controller/state «для desktop».
 
 #### 4. Поток выбора верстки (схема)
 
 ```mermaid
 flowchart LR
     W[MediaQuery sizeOf / Window] --> P[appBreakpointProvider]
-    P --> S[ChatListScreen Smart]
+    P --> S[ChatsShellScreen Smart]
+    R[go_router /chats/:id] --> S
     S --> B{AppBreakpoint}
-    B -->|phone| LP[ChatListPhoneLayout]
-    B -->|tablet| LT[ChatListTabletLayout]
-    B -->|desktop| LD[ChatListDesktopLayout]
-    LP --> V[ChatListView Dumb]
-    LT --> V
-    LD --> V
-    S --> C[ChatListController]
-    C --> R[ChatRepository]
+    B -->|phone| One[один child: list или thread]
+    B -->|tablet desktop| Two[TwoPane master + detail]
+    S --> CL[ChatListController]
+    S --> CT[ChatThreadController]
+    CL --> LV[ChatListView Dumb]
+    CT --> TV[ChatThreadView Dumb]
+    One --> LV
+    One --> TV
+    Two --> LV
+    Two --> TV
 ```
 
-**Резюме:** версию верстки выбирает единственный smart-экран, читая `AppBreakpoint` из общего провайдера; сами верстки — dumb-обёртки и views в `features/chats/presentation/` (list / thread / shell) плюс переиспользуемые `shared/layouts/`. Один и тот же `ChatListState` и controller используются всеми форм-факторами.
+**Резюме:** версию раскладки выбирает smart-shell `ChatsShellScreen`, читая `AppBreakpoint` и route; dumb `ChatListView` / `ChatThreadView` живут в разных подпапках и не знают друг о друге; у каждой подфичи свой Notifier и state на все форм-факторы; композиции — `shared/layouts/` (`TwoPane` / `ThreePane`).
 
 ### 4.7. Зачем нужен `chat_list_state.dart`
 
@@ -420,7 +584,7 @@ abstract class ChatListState with _$ChatListState {
 
 Роль в потоке данных:
 - Controller (`chat_list_controller.dart`) держит это состояние в `AsyncValue<ChatListState>` и меняет его через `copyWith`: пришёл стрим чатов → обновились `chats`, пользователь печатает поиск → обновился `query` (§6.5).
-- Smart-экран (`chat_list_screen.dart`) читает `ref.watch(chatListControllerProvider)` и в `data:` передаёт `ChatListState` в dumb-view.
+- Smart (`ChatListScreen` на phone или `ChatsShellScreen` на wide) читает `ref.watch(chatListControllerProvider)` и в `data:` передаёт `ChatListState` в dumb-view.
 - Dumb-view (`chat_list_view.dart`) получает `state` как props и только рисует по нему: фильтрация по `query`, рендер `chats`, empty state (§3.4).
 
 Почему это важно (архитектурные принципы):
@@ -430,26 +594,28 @@ abstract class ChatListState with _$ChatListState {
 
 **Резюме:** `chat_list_state.dart` — единый immutable «снимок» данных и UI-флагов экрана списка чатов, создаётся controller'ом, передаётся smart'ом в dumb-view и одинаков для всех трёх раскладок.
 
-### 4.8. Что делают `chat_list_screen.dart` и `chat_list_view.dart`
+### 4.8. Что делают `chat_list_screen.dart`, `chat_list_view.dart` и shell
 
-Пара «smart screen + dumb view» — ядро паттерна Smart/Dumb (§3) для экрана списка чатов. Это **целевая структура**: в текущем коде существует только `lib/main.dart`, а `features/chats/` предстоит реализовать по этому плану (§4.6).
+Пара «smart screen + dumb view» — ядро паттерна Smart/Dumb (§3) для **одной** подфичи (список). Master–detail на wide собирает **третий** smart — `ChatsShellScreen` (§4.3). Это **целевая структура**: каркас `lib/src/` уже есть; фичу `chats` предстоит реализовать по этому плану (§4.6).
 
-#### `chat_list_screen.dart` — SMART-компонент
+#### `chat_list_screen.dart` — SMART-компонент (список)
 
-Расположение: `features/chats/presentation/chat_list/chat_list_screen.dart`. Это «умный контейнер», который **только оркестрирует**: подписывается на Riverpod, выбирает вёрстку по breakpoint и передаёт данные + колбэки в глупые виджеты. Полный пример — [§3.4](#34-пример).
+Расположение: `features/chats/presentation/chat_list/chat_list_screen.dart`. «Умный контейнер» **только для списка**: подписывается на Riverpod списка, маппит state → props. На phone может быть builder маршрута `/chats`; на tablet/desktop ту же сборку `ChatListView` делает `ChatsShellScreen` (чтобы рядом положить thread). Полный пример одиночного smart — [§3.4](#34-пример).
 
 Что он делает:
 
-1. **Подписывается на состояние** — `ref.watch(chatListControllerProvider)` (`AsyncValue<ChatListState>`) и `ref.watch(appBreakpointProvider)` (§6.6).
+1. **Подписывается на состояние** — `ref.watch(chatListControllerProvider)` (`AsyncValue<ChatListState>`).
 2. **Обрабатывает три состояния `AsyncValue`:**
    - `loading:` → `ChatListShimmer`;
    - `error:` → `ErrorView` с текстом из `Failure.displayMessage` и `onRetry` → `ref.invalidate(chatListControllerProvider)`;
-   - `data:` → собирает общий dumb-view `ChatListView`.
+   - `data:` → собирает dumb-view `ChatListView`.
 3. **Маппит state → props + callbacks**:
    - `state: state`,
    - `onSearchChanged: (q) => ref.read(chatListControllerProvider.notifier).setSearchQuery(q)`,
-   - `onChatTap: (id) => ref.read(appRouterProvider).go('/chats/$id')` — навигацию делает smart, не dumb.
-4. **Выбирает layout по breakpoint** — принцип «один Notifier — много раскладок» (§1 п.6): один и тот же `ChatListView` оборачивается в `ChatListPhoneLayout` / `ChatListTabletLayout` / `ChatListDesktopLayout` по значению `AppBreakpoint` (§4.6).
+   - `onChatTap: (id) => context.go('/chats/$id')` — навигацию делает smart, не dumb.
+4. **Не** содержит вёрстку пузырей и **не** знает про `ChatThreadView` — соседнюю колонку компонует только shell (§4.3).
+
+Аналогично `chat_thread_screen.dart` — smart только для переписки (phone `/chats/:id` или маппинг внутри shell).
 
 #### `chat_list_view.dart` — DUMB-компонент
 
@@ -459,41 +625,58 @@ abstract class ChatListState with _$ChatListState {
 
 1. **Принимает данные как props**: `ChatListState state` + колбэки `ValueChanged<String> onSearchChanged`, `ValueChanged<String> onChatTap`.
 2. **Рендерит интерфейс списка чатов**: сам список, поле поиска, empty state («No chats»); фильтрация чатов по `query` из `state` выполняется здесь.
-3. **Не знает ни о Riverpod, ни о репозитории, ни о Firebase** — правило §3.3 п.2 и §14 DON'T: dumb не импортирует `flutter_riverpod`, не использует `WidgetRef`, не вызывает `MediaQuery` и не знает про breakpoints.
-4. **Все действия отдаёт через колбэки** — side-effects (навигация, snackbar, вызовы Notifier) делает smart.
+3. **Не знает ни о Riverpod, ни о репозитории, ни о Firebase, ни о соседней колонке thread** — правило §3.3 п.2 и §14 DON'T: dumb не импортирует `flutter_riverpod`, не использует `WidgetRef`, не вызывает `MediaQuery` и не знает про breakpoints.
+4. **Все действия отдаёт через колбэки** — side-effects (навигация, snackbar, вызовы Notifier) делает smart / shell.
 
-#### Взаимосвязь (паттерн Smart/Dumb)
+#### `chats_shell_screen.dart` — SMART-композитор (list + thread)
+
+На tablet/desktop (и как единая точка входа вкладки) shell:
+
+1. `ref.watch` обоих controllers + `appBreakpointProvider` + `chatId` из route.
+2. Собирает те же dumb `ChatListView` и `ChatThreadView` (или делегирует тонким screen-обёрткам).
+3. Phone → один child; wide → `TwoPane` / `ThreePane` из `shared/layouts/`.
+
+Код и таблица маршрутов — [§4.3](#43-masterdetail-chats--groups).
+
+#### Взаимосвязь (паттерн Smart/Dumb + shell)
 
 ```mermaid
 flowchart LR
-    CC[ChatListController] -->|watch| SS[ChatListScreen Smart]
-    BP[AppBreakpoint] --> SS
-    SS -->|props + callbacks| V[ChatListView Dumb]
-    SS -->|switch breakpoint| L[PhoneLayout TabletLayout DesktopLayout]
-    L --> V
-    V -.onChatTap onSearchChanged.-> SS
+    CL[ChatListController] --> Shell[ChatsShellScreen Smart]
+    CT[ChatThreadController] --> Shell
+    BP[AppBreakpoint] --> Shell
+    Route["/chats/:id"] --> Shell
+    Shell -->|props + callbacks| LV[ChatListView Dumb]
+    Shell -->|props + callbacks| TV[ChatThreadView Dumb]
+    Shell -->|phone| One[один child]
+    Shell -->|tablet desktop| Two[TwoPane]
+    One --> LV
+    One --> TV
+    Two --> LV
+    Two --> TV
 ```
 
 #### Ключевые правила
 
 | Правило | Реализация |
 | --- | --- |
-| Один smart на экран (§3.3 п.1) | `ChatListScreen` — единственная точка входа |
-| Dumb без Riverpod (§3.3 п.2) | `ChatListView` — `StatelessWidget` без `ref` |
-| Один Notifier на все форм-факторы (§3.3 п.4) | controller и `ChatListState` общие |
-| Колбэки вместо side-effects (§3.3 п.5) | `onChatTap`, `onSearchChanged` |
-| Immutable state (§1 п.3) | данные приходят как Freezed `ChatListState` |
+| Разные подпапки, один экран на wide (§4.3) | shell компонует dumb из `chat_list/` и `chat_thread/` |
+| Dumb без Riverpod (§3.3 п.2) | `ChatListView` / `ChatThreadView` — без `ref` |
+| Два Notifier’а, не один «для desktop» (§3.3 п.4) | list и thread controllers раздельно; каждый на все форм-факторы |
+| Колбэки вместо side-effects (§3.3 п.5) | `onChatTap`, `onSearchChanged`, `onSend` |
+| Immutable state (§1 п.3) | Freezed `ChatListState` / `ChatThreadState` |
+| Общие маршруты (§4.2) | `/chats`, `/chats/:id` — phone stack / wide split |
 
-**Резюме:** `chat_list_screen.dart` — умный оркестратор (данные + выбор раскладки), а `chat_list_view.dart` — переиспользуемый глупый виджет, который получает один и тот же `ChatListState` и колбэки независимо от того, на phone, tablet или desktop он отрисован.
+**Резюме:** `chat_list_view` и `chat_thread_view` — переиспользуемые dumb из разных папок; на phone их показывают отдельные smart-screen или один child shell; на desktop **не** мержат фичи — `ChatsShellScreen` кладёт оба view в `TwoPane` и оставляет два независимых Notifier’а.
 
 ### 4.9. Где находится вёрстка Bottom Navigation Bar
 
-Bottom Navigation Bar — это **dumb-компонент**, который по архитектуре живёт в `shared/widgets/`, потому что это переиспользуемый виджет уровня приложения (не фичи).
+Bottom Navigation Bar — это **dumb-компонент**, который по архитектуре живёт в `src/shared/widgets/`, потому что это переиспользуемый виджет уровня приложения (не фичи).
 
 #### Вёрстка самого бара
 
 ```
-lib/shared/widgets/bottom_nav_bar.dart   # DUMB: 4 вкладки Chats|Groups|Profile|More (phone)
+lib/src/shared/widgets/t_bottom_nav_bar.dart # DUMB TBottomNavBar: 4 вкладки Chats|Groups|Profile|More (phone)
 ```
 
 Файл добавлен в структуру каталогов в [§5](#5-структура-каталогов). Это глупый виджет: без Riverpod, без `ref`, без `MediaQuery`. Он получает от smart-shell данные через props (выбранную вкладку + `onDestinationSelected`) и просто рисует `BottomNavigationBar` — тело бара и пункты вкладок.
@@ -503,27 +686,29 @@ lib/shared/widgets/bottom_nav_bar.dart   # DUMB: 4 вкладки Chats|Groups|P
 Сама вёрстка бара — dumb, но **решение, когда показывать bar или rail**, принимает умный shell:
 
 ```
-lib/app/router/nav_shell.dart       # SMART: StatefulShellRoute, выбор оболочки по breakpoint
-lib/app/router/app_router.dart      # SMART shell: phone bottom / tablet|desktop rail
+lib/src/utils/router/nav_shell.dart       # SMART UI: BottomNavBar (Phone) / NavigationRail (Wide)
+lib/src/utils/router/app_router.dart      # CONFIG: GoRouter tree & Auth Guards
 ```
 
-Здесь читается `appBreakpointProvider` (§4.1):
+Здесь читается `appBreakpointProvider` (в `nav_shell.dart`, см. §4.1):
 
-- `phone` → dumb `BottomNavigationBar` из `shared/widgets/bottom_nav_bar.dart`;
-- `tablet` / `desktop` → dumb `NavigationRail` (в том же `shared/widgets/`).
+- `phone` → dumb `TBottomNavBar` из `src/shared/widgets/t_bottom_nav_bar.dart`;
+- `tablet` / `desktop` → dumb `TNavigationRail` (в том же `shared/widgets/`).
+
+*Совет на будущее:* Если проект сильно разрастётся, маршруты фич (из `app_router.dart`) можно будет разбить на отдельные файлы (например, `chats_routes.dart`), чтобы `app_router.dart` собирал их как модули. Также можно использовать библиотеку `go_router_builder` для кодогенерации типизированных маршрутов.
 
 #### Схема
 
 ```mermaid
 flowchart LR
     BP[appBreakpointProvider] --> NS[nav_shell.dart Smart]
-    NS -->|phone| BBN[bottom_nav_bar.dart Dumb]
+    NS -->|phone| BBN[t_bottom_nav_bar.dart TBottomNavBar]
     NS -->|tablet desktop| NR[NavigationRail Dumb]
     BBN -->|StatefulShellRoute| Tabs[Chats Groups Profile More]
     NR --> Tabs
 ```
 
-**Резюме:** вёрстка Bottom Navigation Bar находится в dumb-виджете `shared/widgets/bottom_nav_bar.dart` — там тело бара и пункты вкладок; а умная логика выбора между bar и rail — в `app/router/nav_shell.dart` / `app_router.dart`. Так соблюдается правило «Smart выбирает раскладку, Dumb её рисует» (§3.1).
+**Резюме:** вёрстка Bottom Navigation Bar находится в dumb-виджете `TBottomNavBar` (`src/shared/widgets/t_bottom_nav_bar.dart`) — там тело бара и пункты вкладок; а умная логика выбора между bar и rail — в `utils/router/nav_shell.dart`. Дерево маршрутов и Auth Guards лежат отдельно в `utils/router/app_router.dart`. Так соблюдается правило «Smart выбирает раскладку, Dumb её рисует» (§3.1).
 
 ---
 
@@ -532,81 +717,207 @@ flowchart LR
 ```
 lib/
 ├── main.dart
-├── app/
-│   ├── app.dart                 # MaterialApp, тема, router
-│   ├── router/
-│   │   ├── app_router.dart      # SMART shell: phone bottom / tablet|desktop rail
-│   │   └── nav_shell.dart       # SMART: StatefulShellRoute, выбор оболочки по breakpoint
-│   ├── adaptive/
-│   │   ├── breakpoints.dart     # AppBreakpoint enum + пороги
-│   │   ├── app_breakpoint_provider.dart
-│   │   └── responsive_builder.dart  # optional helper (smart-only)
-│   └── providers/
-│       └── app_providers.dart   # theme, locale
-│
-├── core/
-│   ├── error/
-│   │   └── failures.dart        # Freezed Failure hierarchy
-│   ├── extensions/
-│   ├── utils/
-│   └── constants/
-│
-├── shared/
-│   ├── widgets/                 # DUMB: Button, Avatar, ChatBubble…
-│   │   └── bottom_nav_bar.dart  # DUMB: 4 вкладки Chats|Groups|Profile|More (phone)
-│   ├── layouts/                 # DUMB: MaxWidthBox, TwoPane, ThreePane
-│   └── providers/               # firebase, shared services
-│
-└── features/
-    ├── auth/
-    │   ├── domain/
-    │   │   ├── entities/
-    │   │   │   └── auth_user.dart
-    │   │   └── repositories/
-    │   │       └── auth_repository.dart
-    │   ├── data/
-    │   │   ├── datasources/
-    │   │   │   └── auth_remote_datasource.dart
-    │   │   ├── dto/
-    │   │   │   └── user_dto.dart
-    │   │   └── repositories/
-    │   │       └── auth_repository_impl.dart
-    │   └── presentation/
-    │       ├── login/
-    │       │   ├── login_screen.dart      # SMART
-    │       │   ├── login_view.dart        # DUMB
-    │       │   ├── login_controller.dart
-    │       │   └── login_state.dart
-    │       ├── register/
-    │       │   ├── register_screen.dart   # SMART
-    │       │   ├── register_view.dart     # DUMB
-    │       │   ├── register_controller.dart
-    │       │   └── register_state.dart
-    │       └── otp/
-    │           ├── otp_screen.dart
-    │           ├── otp_view.dart
-    │           ├── otp_controller.dart
-    │           └── otp_state.dart
+└── src/
+    ├── app.dart                     # MaterialApp, тема, router
     │
-    ├── chats/
-    │   └── presentation/
-    │       ├── shell/
-    │       │   └── chats_shell_screen.dart   # SMART: master–detail
-    │       ├── chat_list/
-    │       │   ├── chat_list_screen.dart     # SMART (или часть shell)
-    │       │   ├── chat_list_view.dart       # DUMB
-    │       │   ├── chat_list_controller.dart
-    │       │   └── chat_list_state.dart
-    │       ├── chat_thread/
-    │       │   ├── chat_thread_screen.dart
-    │       │   ├── chat_thread_view.dart
-    │       │   ├── chat_thread_controller.dart
-    │       │   └── chat_thread_state.dart
-    │       └── widgets/                      # DUMB feature widgets
-    ├── groups/
-    ├── profile/
-    └── more/
+    ├── utils/
+    │   ├── exceptions/              # исключения / Failure
+    │   ├── constants/               # размеры, цвета, breakpoints
+    │   │   ├── colors.dart          # TColors
+    │   │   ├── sizes.dart           # TSizes
+    │   │   └── breakpoints.dart     # AppBreakpoint, TBreakpoints
+    │   ├── device/                  # функции устройства
+    │   ├── formatters/              # форматирование
+    │   ├── helpers/                 # вспомогательные функции
+    │   ├── logging/                 # логирование
+    │   ├── theme/                   # темы приложения
+    │   │   ├── theme.dart           # TAppTheme (light / dark)
+    │   │   └── widget_themes/       # темы отдельных виджетов
+    │   │       ├── appbar_theme.dart
+    │   │       ├── bottom_navigator_bar_theme.dart
+    │   │       ├── elevated_button_theme.dart
+    │   │       ├── snack_bar_theme.dart
+    │   │       ├── switch_theme.dart
+    │   │       ├── tabbar_theme.dart
+    │   │       ├── text_field_theme.dart
+    │   │       └── text_theme.dart
+    │   ├── validators/              # валидаторы
+    │   ├── router/                  # go_router
+    │   │   ├── app_router.dart      # CONFIG: GoRouter tree & Auth Guards
+    │   │   └── nav_shell.dart       # SMART UI: BottomNavBar (Phone) / NavigationRail (Wide)
+    │   └── providers/               # общие Riverpod-провайдеры
+    │       └── app_breakpoint_provider.dart  # appBreakpointProvider + ResponsiveBuilder
+    │
+    ├── shared/
+    │   ├── widgets/                 # DUMB: TChatButton, TAvatar, TChatBubble…
+    │   │   └── t_bottom_nav_bar.dart  # DUMB: TBottomNavBar — 4 вкладки (phone)
+    │   └── layouts/                 # DUMB: общие layout-обёртки (не feature-specific)
+    │       ├── max_width_box.dart   # MaxWidthBox — формы auth/profile/more на desktop
+    │       ├── two_pane.dart        # TwoPane — master–detail (chats/groups, tablet+)
+    │       └── three_pane.dart      # ThreePane — list | thread | info (desktop)
+    │
+    └── features/
+        ├── auth/
+        │   ├── domain/
+        │   │   ├── entities/
+        │   │   │   └── auth_user.dart
+        │   │   └── repositories/
+        │   │       └── auth_repository.dart
+        │   ├── data/
+        │   │   ├── datasources/
+        │   │   │   └── auth_remote_datasource.dart
+        │   │   ├── dto/
+        │   │   │   └── user_dto.dart
+        │   │   └── repositories/
+        │   │       └── auth_repository_impl.dart
+        │   └── presentation/
+        │       ├── login/
+        │       │   ├── login_screen.dart      # SMART
+        │       │   ├── login_view.dart        # DUMB
+        │       │   ├── login_controller.dart
+        │       │   └── login_state.dart
+        │       └── register/
+        │           ├── register_screen.dart   # SMART
+        │           ├── register_view.dart     # DUMB
+        │           ├── register_controller.dart
+        │           └── register_state.dart
+        │
+        ├── chats/
+        │   └── presentation/
+        │       ├── shell/
+        │       │   └── chats_shell_screen.dart   # SMART: phone → list|thread; wide → TwoPane/ThreePane из shared/layouts/
+        │       ├── chat_list/
+        │       │   ├── chat_list_screen.dart     # SMART (phone / тонкая обёртка)
+        │       │   ├── chat_list_view.dart       # DUMB (Параметризованный)
+        │       │   ├── chat_list_controller.dart
+        │       │   └── chat_list_state.dart
+        │       ├── chat_thread/
+        │       │   ├── chat_thread_screen.dart   # SMART (phone / тонкая обёртка)
+        │       │   ├── chat_thread_view.dart     # DUMB
+        │       │   ├── chat_thread_controller.dart
+        │       │   └── chat_thread_state.dart
+        │       └── widgets/                      # DUMB feature widgets
+        │
+        ├── groups/                              # тот же master–detail, что chats (§4.3)
+        │   ├── domain/
+        │   │   ├── entities/
+        │   │   │   └── group.dart               # или reuse Chat (type == group)
+        │   │   └── repositories/
+        │   │       └── group_repository.dart    # часто делегирует в ChatRepository
+        │   ├── data/
+        │   │   ├── datasources/
+        │   │   │   └── group_remote_datasource.dart
+        │   │   ├── dto/
+        │   │   │   └── group_dto.dart
+        │   │   └── repositories/
+        │   │       └── group_repository_impl.dart
+        │   └── presentation/
+        │       ├── shell/
+        │       │   └── groups_shell_screen.dart # SMART: list + thread (+ info на desktop)
+        │       ├── group_list/
+        │       │   ├── group_list_screen.dart   # SMART (phone / тонкая обёртка)
+        │       │   ├── group_list_view.dart     # DUMB
+        │       │   ├── group_list_controller.dart
+        │       │   └── group_list_state.dart
+        │       ├── group_thread/
+        │       │   ├── group_thread_screen.dart # SMART (phone); можно reuse ChatThreadView
+        │       │   ├── group_thread_view.dart   # DUMB (имя отправителя в ленте)
+        │       │   ├── group_thread_controller.dart
+        │       │   └── group_thread_state.dart
+        │       ├── create_group/
+        │       │   ├── create_group_screen.dart # SMART
+        │       │   ├── create_group_view.dart   # DUMB: Name + Members
+        │       │   ├── create_group_controller.dart
+        │       │   └── create_group_state.dart
+        │       ├── group_info/
+        │       │   ├── group_info_screen.dart   # SMART (phone / detail pane)
+        │       │   ├── group_info_view.dart     # DUMB: members, mute, roles
+        │       │   ├── group_info_controller.dart
+        │       │   └── group_info_state.dart
+        │       └── widgets/                     # DUMB feature widgets
+        │
+        ├── profile/                             # вкладка Profile; desktop — MaxWidthBox
+        │   ├── domain/
+        │   │   ├── entities/
+        │   │   │   └── user_profile.dart
+        │   │   └── repositories/
+        │   │       └── user_repository.dart
+        │   ├── data/
+        │   │   ├── datasources/
+        │   │   │   └── user_remote_datasource.dart
+        │   │   ├── dto/
+        │   │   │   └── user_profile_dto.dart
+        │   │   └── repositories/
+        │   │       └── user_repository_impl.dart
+        │   └── presentation/
+        │       ├── profile/
+        │       │   ├── profile_screen.dart      # SMART
+        │       │   ├── profile_view.dart        # DUMB: аватар, имя, phone, eChatPublicId
+        │       │   ├── profile_controller.dart
+        │       │   └── profile_state.dart
+        │       ├── edit_profile/
+        │       │   ├── edit_profile_screen.dart # SMART
+        │       │   ├── edit_profile_view.dart   # DUMB: имя, аватар, about
+        │       │   ├── edit_profile_controller.dart
+        │       │   └── edit_profile_state.dart
+        │       └── widgets/                     # DUMB feature widgets
+        │
+        └── more/                                # вкладка More (настройки)
+            ├── domain/
+            │   ├── entities/
+            │   │   └── user_settings.dart
+            │   └── repositories/
+            │       └── settings_repository.dart
+            ├── data/
+            │   ├── datasources/
+            │   │   └── settings_remote_datasource.dart
+            │   ├── dto/
+            │   │   └── user_settings_dto.dart
+            │   └── repositories/
+            │       └── settings_repository_impl.dart
+            └── presentation/
+                ├── more/
+                │   ├── more_screen.dart         # SMART: список пунктов настроек
+                │   ├── more_view.dart           # DUMB
+                │   ├── more_controller.dart
+                │   └── more_state.dart
+                ├── language/
+                │   ├── language_screen.dart     # SMART (en/ru)
+                │   ├── language_view.dart       # DUMB
+                │   ├── language_controller.dart
+                │   └── language_state.dart
+                ├── theme/
+                │   ├── theme_screen.dart        # SMART: ThemeMode + persist
+                │   ├── theme_view.dart          # DUMB
+                │   ├── theme_controller.dart
+                │   └── theme_state.dart
+                └── widgets/                     # DUMB: invite, help/about tiles…
 ```
+
+**Layouts:**
+
+| Где | Файлы / классы | Назначение |
+| --- | --- | --- |
+| `shared/layouts/` | `MaxWidthBox`, `TwoPane`, `ThreePane` | общие split / max-width обёртки |
+
+Master–detail list+thread на wide по-прежнему собирает `ChatsShellScreen` через `TwoPane` / `ThreePane` (§4.3).
+
+**Назначение `src/utils/`:**
+
+| Папка | Содержимое |
+| --- | --- |
+| `exceptions/` | sealed `Failure` и прочие исключения домена/инфры |
+| `constants/` | цвета (`TColors`), размеры (`TSizes`), breakpoints |
+| `device/` | код работы с функциями устройства |
+| `formatters/` | форматирование дат, телефонов и т.п. |
+| `helpers/` | вспомогательные функции (в т.ч. adaptive helpers) |
+| `logging/` | логирование |
+| `theme/` | `TAppTheme` + `widget_themes/` (темы AppBar, Button, TextField…) |
+| `validators/` | валидаторы форм |
+| `router/` | конфиг `go_router`, Auth Guards, SMART shell (оболочка вкладок) |
+| `providers/` | общие Riverpod-провайдеры (`appBreakpointProvider`, `ResponsiveBuilder`, …) |
+
+**Тема (`theme.dart`):** класс `TAppTheme` с приватным конструктором и статическими `lightTheme` / `darkTheme`; виджет-темы подключаются из `widget_themes/` (как `TAppBarTheme`, `TTextTheme`, …). Цвета — из `utils/constants/colors.dart` (`TColors`).
 
 **Правило именования файлов:**
 
@@ -614,15 +925,18 @@ lib/
 | --- | --- | --- |
 | Smart-экран | `{name}_screen.dart` | `chat_list_screen.dart` |
 | Dumb-view | `{name}_view.dart` | `chat_list_view.dart` |
-| Layout-обёртка (dumb) | `{name}_layout.dart` / `two_pane.dart` | `chats_tablet_layout.dart` |
+| Layout-обёртка (dumb, shared) | `shared/layouts/{name}.dart` | `two_pane.dart` → `TwoPane` |
 | Notifier | `{name}_controller.dart` | `chat_list_controller.dart` |
 | UI state | `{name}_state.dart` | `chat_list_state.dart` |
+| Пользовательский виджет (класс `T…`) | `t_{name}.dart` | `t_chat_button.dart` → `TChatButton` |
 | Repository (interface) | `{name}_repository.dart` | `chat_repository.dart` |
 | Repository (impl) | `{name}_repository_impl.dart` | `chat_repository_impl.dart` |
 | DTO | `{name}_dto.dart` | `message_dto.dart` |
 | Entity | `{name}.dart` | `message.dart` |
 
-**Не создавать** папки `mobile/`, `tablet/`, `desktop/` с копиями целых фич — только разные layout-композиции одних dumb-виджетов.
+**Пользовательские виджеты** (shared design-system и feature dumb: tiles, bubbles, buttons) — класс с префиксом **`T`**, файл `t_*.dart`. Пример: `TChatButton`, `TAvatar`, `TChatListTile`. Не относится к `*_screen` / `*_view` / `*_controller`, root `EChatApp`. Классы темы (`TAppTheme`, `TColors`, `TAppBarTheme`) — префикс `T`, файлы в `utils/theme/` и `utils/constants/`.
+
+**Не создавать** папки `mobile/`, `tablet/`, `desktop/` с копиями целых фич — только параметризованные dumb-компоненты и общие обёртки из `shared/layouts/`.
 
 ---
 
@@ -665,7 +979,7 @@ dev_dependencies:
 | Repository / Service | `@Riverpod(keepAlive: true)` | `AuthRepository`, `ChatRepository` |
 | Stream данных | `@riverpod` → `Stream<T>` | список чатов, сообщения |
 | Async загрузка | `@riverpod` class extends `_$X extends AsyncNotifier` | `ChatListController` |
-| Синхронный UI state | `@riverpod` class extends `_$X extends Notifier` | форма Login, OTP |
+| Синхронный UI state | `@riverpod` class extends `_$X extends Notifier` | форма Login, Register |
 | Параметризованный | `@riverpod` с аргументами | `messageList(chatId)` |
 
 ### 6.4. Пример: repository provider
@@ -706,27 +1020,34 @@ Stream<Either<Failure, List<Chat>>> chatListStream(Ref ref) =>
 
 @riverpod
 class ChatListController extends _$ChatListController {
-  StreamSubscription<Either<Failure, List<Chat>>>? _sub;
-
   @override
   Future<ChatListState> build() async {
-    final stream = ref.watch(chatListStreamProvider);
-    ref.onDispose(() => _sub?.cancel());
-
-    // Ошибки попадают в AsyncValue.error как sealed Failure.
-    _sub = stream.listen(
-      (result) => result.fold(
-        (failure) => state = AsyncError(failure, StackTrace.current),
-        (chats) => state = AsyncData(
-          (state.value ?? const ChatListState(chats: [], query: ''))
-              .copyWith(chats: chats),
-        ),
-      ),
-      onError: (Object e, StackTrace st) =>
-          state = AsyncError(e is Failure ? e : Failure.unexpected(e), st),
+    // 1. Слушаем обновления стрима реактивно (работает автоматически вне build)
+    ref.listen(
+      chatListStreamProvider,
+      (previous, next) {
+        if (next is AsyncData) {
+          next.value.fold(
+            (failure) => state = AsyncError(failure, StackTrace.current),
+            (chats) => state = AsyncData(
+              (state.valueOrNull ?? const ChatListState(chats: [], query: ''))
+                  .copyWith(chats: chats),
+            ),
+          );
+        } else if (next is AsyncError) {
+          final err = next.error;
+          state = AsyncError(err is Failure ? err : Failure.unexpected(err), next.stackTrace);
+        }
+      },
     );
 
-    return const ChatListState(chats: [], query: '');
+    // 2. Ждем первого значения из стрима для инициализации состояния
+    final initialResult = await ref.watch(chatListStreamProvider.future);
+
+    return initialResult.fold(
+      (failure) => throw failure, // Ошибка попадёт в AsyncValue.error
+      (chats) => ChatListState(chats: chats, query: ''),
+    );
   }
 
   Future<void> refresh() async {
@@ -815,7 +1136,7 @@ ProviderScope(
 | DTO (Firestore) | да | да (`fromJson` / `toJson`) |
 | UI state | да | нет |
 | Failure / sealed errors | да (`@freezed sealed`) | нет |
-| Union (OTP step, Auth flow) | да | нет |
+| Union (Auth flow) | да | нет |
 
 ### 7.2. Entity (domain)
 
@@ -877,24 +1198,22 @@ extension MessageDtoX on MessageDto {
 ### 7.4. UI state
 
 ```dart
-// features/auth/presentation/otp/otp_state.dart
+// features/auth/presentation/login/login_state.dart
 @freezed
-abstract class OtpState with _$OtpState {
-  const factory OtpState({
-    required String verificationId,
-    required String phoneDisplay,
-    required Duration resendCooldown,
-    @Default('') String code,
+abstract class LoginState with _$LoginState {
+  const factory LoginState({
+    @Default('') String phone,
+    @Default('') String password,
     @Default(false) bool isSubmitting,
     Failure? error,
-  }) = _OtpState;
+  }) = _LoginState;
 }
 ```
 
 ### 7.5. Sealed failures
 
 ```dart
-// core/error/failures.dart
+// utils/exceptions/failures.dart
 @freezed
 sealed class Failure with _$Failure {
   const Failure._();
@@ -1016,12 +1335,12 @@ final result = Either<Failure, int>.Do(($) {
 На границе UI Do не нужен: разбор результата через `fold`.
 
 ```dart
-Future<void> submitOtp() async {
+Future<void> login() async {
   state = state.copyWith(isSubmitting: true, error: null);
 
-  final result = await ref.read(authRepositoryProvider).confirmOtp(
-        verificationId: state.verificationId,
-        code: state.code,
+  final result = await ref.read(authRepositoryProvider).login(
+        phone: state.phone,
+        password: state.password,
       );
 
   result.fold(
@@ -1062,14 +1381,19 @@ TypingRemoteDataSource (RTDB)
             → ChatThreadScreen (SMART) → ChatThreadView (DUMB indicator)
 ```
 
-Пример: **выбор чата на desktop**.
+Пример: **выбор чата на desktop** (master–detail, §4.3).
 
 ```
-ChatListView.onChatTap(id)                    # DUMB
-    → ChatsShellScreen                        # SMART
-        → update selectedChatId / router
-        → TwoPane(list + ChatThreadView)      # DUMB layout + views
+ChatListView.onChatTap(id)                    # DUMB (подпапка chat_list/)
+    → ChatsShellScreen                        # SMART shell
+        → context.go('/chats/$id')            # тот же route, что и на phone
+        → TwoPane(
+              master: ChatListView,           # DUMB
+              detail: ChatThreadView,         # DUMB (подпапка chat_thread/)
+            )
 ```
+
+На phone тот же `onChatTap` → `/chats/:id` показывает **только** `ChatThreadView` (полный экран); контроллеры list и thread не сливаются.
 
 ---
 
@@ -1100,9 +1424,9 @@ ChatListView.onChatTap(id)                    # DUMB
 | Feature | Presentation (smart → dumb) | Domain | Data sources |
 | --- | --- | --- | --- |
 | `onboarding` | Introduce, Loading | — | SharedPreferences |
-| `auth` | Login, OTP, User Info | AuthRepository | Firebase Auth, Firestore `users` |
+| `auth` | Login, Register, User Info | AuthRepository | Firebase Auth, Firestore `users` |
 | `security` | PIN, Face/Touch ID | — | secure_storage (local) |
-| `chats` | Shell + list/thread (master–detail на tablet/desktop) | ChatRepository, Message | Firestore, RTDB typing |
+| `chats` | `ChatsShellScreen` + `chat_list` / `chat_thread` (dumb рядом на tablet/desktop) | ChatRepository, Message | Firestore, RTDB typing |
 | `groups` | Group list, create, members (+ split view) | ChatRepository | Firestore |
 | `calls` | Call, Video calling | CallRepository | Firestore `calls` + WebRTC provider |
 | `contacts` | Add Friend | ContactRepository | Firestore `contacts`, `users` |
@@ -1110,9 +1434,9 @@ ChatListView.onChatTap(id)                    # DUMB
 | `more` | Settings, Language, Theme | SettingsRepository | Firestore `userSettings` |
 | `notifications` | Notification list | NotificationRepository | Firestore, FCM |
 
-Каждый feature **самодостаточен**: своё `presentation`, `domain`, `data`. Общее — только `core/`, `shared/`, `app/adaptive/`.
+Каждый feature **самодостаточен**: своё `presentation`, `domain`, `data`. Общее — только `src/utils/`, `src/shared/`, `src/app.dart`.
 
-Presentation внутри feature всегда: **smart screen** + **dumb view(s)** + **controller/state**. Layout-варианты phone/tablet/desktop — композиции dumb, не отдельные фичи.
+Presentation внутри feature всегда: **smart screen** + **dumb view(s)** + **controller/state**. Layout-варианты phone/tablet/desktop — композиции dumb, не отдельные фичи. Если на wide нужны два экрана рядом (list + thread) — третий smart-shell компонует dumb из **разных подпапок** одной feature (§4.3); не сливать Notifier’ы и не плодить копии фич под форм-фактор.
 
 ---
 
@@ -1213,16 +1537,21 @@ testWidgets('ChatListView shows empty state', (tester) async {
 - `Either<Failure, T>` на границе domain ↔ data.
 - fpdart: `TaskEither.Do` / `Either.Do` / `Option.Do` для цепочек из 2+ шагов.
 - **Smart** = `ConsumerWidget` / `ConsumerStatefulWidget`; **Dumb** = `StatelessWidget` / `StatefulWidget` без Riverpod.
-- Один controller на фичу-экран; отдельные layouts для phone / tablet / desktop.
+- Пользовательские виджеты — класс с префиксом `T` (`TChatButton`), файл `t_*.dart`.
+- Один controller на подфичу-экран (list и thread — раздельно); layouts / shell для phone / tablet / desktop.
 - Маппинг DTO → Entity только в `data/`.
 - `ref.invalidate` / `ref.refresh` для pull-to-refresh.
-- Breakpoints только через `appBreakpointProvider` / `app/adaptive/`.
+- Breakpoints только через `appBreakpointProvider` / `utils/constants/breakpoints.dart` + `utils/providers/`.
+- Выбор layout в smart: `ResponsiveBuilder` или `switch` по `AppBreakpoint` (§4.1.1).
+- Master–detail (chats/groups): smart-shell компонует dumb из разных подпапок; общие маршруты `/…` и `/…/:id` (§4.3).
 
 ### DON'T
 
 - `FirebaseFirestore.instance` в виджетах.
 - `ref.watch` / `WidgetRef` в dumb (`*_view.dart`, shared widgets).
+- Кастомные виджеты без префикса `T` / файла `t_` (`ChatButton`, `EChatButton` — только `TChatButton`).
 - Отдельные Notifier или feature-копии «для tablet» / «для desktop».
+- Сливать `chat_list` + `chat_thread` в один controller/state ради desktop; знать breakpoint внутри dumb-view.
 - `setState` для бизнес-логики (только локальная анимация/форма без state).
 - `dynamic` / `Map<String, dynamic>` в domain и presentation.
 - Проглатывание ошибок (`catch (_) {}` без `Failure`).
@@ -1240,7 +1569,9 @@ testWidgets('ChatListView shows empty state', (tester) async {
 - [ ] Models/state на Freezed
 - [ ] Нет Firebase SDK в `presentation/`
 - [ ] Smart/Dumb разделены; dumb без Riverpod
+- [ ] Кастомные виджеты с префиксом `T` и файлом `t_*.dart`
 - [ ] Новые экраны проверены на phone и хотя бы одном wide breakpoint (tablet или desktop)
+- [ ] Master–detail (если есть): shell + два dumb, не копия фичи под wide
 
 ---
 
@@ -1290,6 +1621,7 @@ flowchart TB
 - [roadmap.md](./roadmap.md) — фазы, включая adaptive UI
 - [firebase-database.md](./firebase-database.md) — модели Firestore для DTO/Entity
 - [firebase-setup.md](./firebase-setup.md) — Auth, rules, Functions
+- [firebase-registration.md](./firebase-registration.md) — Sign Up: Phone Auth, профиль, guard
 - [firebase-flutter-connect.md](./firebase-flutter-connect.md) — инициализация Firebase в `main.dart`
 - [firebase-events.md](./firebase-events.md) — Console, логи Functions, `snapshots()`, Analytics
 - [Riverpod 3 docs](https://riverpod.dev/)

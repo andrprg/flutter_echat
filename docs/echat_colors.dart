@@ -4,7 +4,8 @@
 // https://www.figma.com/design/Do69JP5vfRzBNw3OO2jRHH/Chatting-App-UI-Kit-Design-_-E-Chat-_-Figma--Community-
 // Канвас: node-id=21-122 (Light Mode + Dark Mode)
 //
-// Перенесите в lib/core/theme/echat_colors.dart при подключении к приложению.
+// Перенесено в lib/src/utils/constants/colors.dart (`TColors` / `TSemanticColors`).
+// Этот файл — справочная копия токенов из Figma.
 // Зависимость: flutter (material.dart)
 
 import 'package:flutter/material.dart';
@@ -255,6 +256,6 @@ abstract final class EChatSemanticColors {
   static const Color messageDelivered = EChatColors.lightBlue500;
   static const Color messageRead = EChatColors.blue500;
 
-  static const Color otpError = EChatColors.error500;
-  static const Color otpFilled = EChatColors.blue500;
+  static const Color codeError = EChatColors.error500;
+  static const Color codeFilled = EChatColors.blue500;
 }
