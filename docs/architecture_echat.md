@@ -1399,17 +1399,79 @@ ChatListView.onChatTap(id)                    # DUMB (подпапка chat_list
 
 ## 10. Ошибки и Result
 
-| Уровень | Формат ошибки |
-| --- | --- |
-| DataSource | `try/catch` → throw или return raw |
-| Repository | `Either<Failure, T>` |
-| Notifier | `fold` → sealed `Failure` в state или `AsyncValue.error` с sealed `Failure` |
-| Smart UI | `Failure.displayMessage`, retry, snackbar |
-| Dumb UI | отображает `Failure.displayMessage` / `onRetry` из props |
+Организация исключений построена на строгом функциональном подходе с использованием **Freezed** и **fpdart**. В приложении не принято выбрасывать исключения наружу через `throw` и ловить их через глобальные `try/catch` на уровне бизнес-логики или UI. Все ошибки инкапсулируются в объекты `Failure`.
 
-> Все ошибки в системе — sealed `Failure` (см. §7.5). `String` / `Option<String>` для ошибок не используются: UI берёт текст только из `Failure.displayMessage`.
+### 10.1. Где и как объявлять исключения (`utils/exceptions`)
 
-**Optimistic UI** для сообщений:
+Все ошибки приложения описываются как один или несколько `sealed class`, сгенерированных через **Freezed**.
+
+```dart
+// lib/src/utils/exceptions/failures.dart
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'failures.freezed.dart';
+
+@freezed
+sealed class Failure with _$Failure {
+  const Failure._();
+
+  const factory Failure.network([String? message]) = NetworkFailure;
+  const factory Failure.auth(AuthFailureReason reason) = AuthFailure;
+  const factory Failure.firestore(String code) = FirestoreFailure;
+  const factory Failure.notFound() = NotFoundFailure;
+  const factory Failure.unexpected(Object error) = UnexpectedFailure;
+
+  // Обязательный геттер для получения текста ошибки
+  String get displayMessage => switch (this) {
+        NetworkFailure(:final message) => message ?? 'Нет подключения к сети',
+        AuthFailure(:final reason) => reason.message,
+        FirestoreFailure(:final code) => 'Ошибка базы данных: $code',
+        NotFoundFailure() => 'Запрошенные данные не найдены',
+        UnexpectedFailure() => 'Что-то пошло не так, попробуйте позже',
+      };
+}
+```
+
+### 10.2. Поток обработки ошибок по слоям
+
+| Уровень | Формат ошибки | Описание |
+| --- | --- | --- |
+| **DataSource** | `try/catch` → `throw Failure` | Только DataSource ловит сырые исключения (FirebaseException и др.) через `try/catch` и сразу маппит их в доменный `Failure`. |
+| **Repository** | `Either<Failure, T>` | Возвращают `Either` из `fpdart`. Никогда не выбрасывают исключения наружу. Если шагов несколько — используется `TaskEither.Do`. |
+| **Notifier** | `fold()` → UI state | Riverpod-контроллер распаковывает `Either` через `.fold()` и кладет `Failure` в стейт (например, в `AsyncValue.error` или `error: failure` в классе состояния). |
+| **Smart UI** | `err.displayMessage` | UI не знает о системных исключениях. Берет `Failure` из стейта и вызывает геттер `.displayMessage`. |
+| **Dumb UI** | `message`, `onRetry` | Рисует текст `message` и callback `onRetry`, полученные из Smart-виджета. |
+
+**Пример обработки в DataSource:**
+```dart
+try {
+  await firebase.collection('chats').doc(id).set(data);
+} on FirebaseException catch (e) {
+  throw Failure.firestore(e.code); 
+} catch (e) {
+  throw Failure.unexpected(e);
+}
+```
+
+**Пример обработки в Smart UI (`*_screen.dart`):**
+```dart
+return chatState.when(
+  data: (chat) => ChatView(chat: chat),
+  loading: () => const CircularProgressIndicator(),
+  error: (err, stack) {
+    final message = err is Failure ? err.displayMessage : 'Неизвестная ошибка';
+    return ErrorView(message: message, onRetry: () => ref.invalidate(chatControllerProvider));
+  },
+);
+```
+
+### 10.3. Архитектурные табу (DON'Ts)
+
+- **Строки для ошибок:** Ошибки нельзя передавать как `String` или `Option<String>`. Строки извлекаются из интерфейса пользователя только в самом конце через `Failure.displayMessage`.
+- **Исключения выше DataSource:** Прямое использование Firebase SDK (`FirebaseException`) и сторонних классов-исключений в виджетах и слое Presentation запрещено.
+- **Проглатывание ошибок:** Конструкция `catch (_) {}` без логирования или оборачивания в `Failure` недопустима.
+
+### 10.4. Optimistic UI для сообщений
 
 1. Notifier добавляет `Message` со `status: sending` в локальный state.
 2. Repository возвращает `Either`.
