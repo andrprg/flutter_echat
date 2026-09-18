@@ -31,7 +31,7 @@
 | Задача | Как |
 | --- | --- |
 | DI (Firebase, repositories) | `@Riverpod(keepAlive: true)` |
-| UI state (форма OTP) | `@riverpod` + `Notifier` |
+| UI state (форма Login) | `@riverpod` + `Notifier` |
 | Async / загрузка | `@riverpod` + `AsyncNotifier` |
 | Live данные | `@riverpod` → `Stream<T>` |
 | Тесты | `overrides` без моков виджетов |
@@ -182,9 +182,9 @@ Stream<List<Chat>> watchChats(Ref ref) {
 
 ```dart
 @riverpod
-class OtpController extends _$OtpController {
+class LoginController extends _$LoginController {
   @override
-  OtpState build() => OtpState(/* ... */);
+  LoginState build() => LoginState(/* ... */);
 
   void setCode(String code) {
     state = state.copyWith(code: code);
@@ -432,9 +432,9 @@ ChatRepository chatRepository(Ref ref) => ChatRepositoryImpl(...);
 
 // sync state
 @riverpod
-class OtpController extends _$OtpController {
+class LoginController extends _$LoginController {
   @override
-  OtpState build() => const OtpState();
+  LoginState build() => const LoginState();
   void setCode(String c) => state = state.copyWith(code: c);
 }
 

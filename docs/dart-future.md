@@ -320,7 +320,7 @@ Future<String> waitForCode() {
     verificationFailed: (e) => c.completeError(e),
     codeSent: (id, _) => c.complete(id),
     codeAutoRetrievalTimeout: (_) {
-      if (!c.isCompleted) c.completeError(TimeoutException('OTP'));
+      if (!c.isCompleted) c.completeError(TimeoutException('Login'));
     },
   );
 
@@ -408,7 +408,7 @@ Future<void> refresh() async {
 }
 ```
 
-Либо без исключений: `await repo...` → `fold` в `state` (как `submitOtp` в architecture).
+Либо без исключений: `await repo...` → `fold` в `state` (как `login` в architecture).
 
 ### UI
 

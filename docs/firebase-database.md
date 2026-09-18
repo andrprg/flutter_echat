@@ -16,7 +16,7 @@
 
 | Сервис | Назначение |
 | --- | --- |
-| **Authentication** | Вход и регистрация по **номеру телефона + OTP** (экраны Login / Register, Remember me) |
+| **Authentication** | Вход и регистрация (экраны Login / Register, Remember me) |
 | **Cloud Firestore** | Пользователи, чаты, сообщения, звонки, контакты, уведомления, настройки |
 | **Realtime Database** | Online/lastSeen и индикатор «печатает» (экран `(Ver 2) Chats _ Conversation _ Typing`) |
 | **Cloud Storage** | Аватары, медиа чатов, голосовые записи, документы, кастомные фоны |
@@ -35,7 +35,7 @@ Firestore выбран как основная БД: документы хоро
 | --- | --- |
 | **Loading** (_Start, _Middle, _Done) | Локально; версия приложения в `pubspec` |
 | **Introduce _ Step 1–4** (Group Chatting, Video/Voice Calls, Message Encryption, Cross-Platform) | Локально (`onboardingCompleted`) |
-| **Login / Sign Up** (_Empty, _Typing, _Filled, _OTP*) | Firebase Auth (phone) + `users` |
+| **Login / Sign Up** (_Empty, _Typing, _Filled*) | Firebase Auth + `users` |
 | **Sign Up _ User Information** (имя + аватар) | `users` |
 | **Set Face ID / Touch ID / PIN Security** | Флаги в `users`; секреты локально |
 | **Setting _ Notification** | `userSettings.notificationsEnabled` + OS permission |
@@ -62,7 +62,7 @@ Firestore выбран как основная БД: документы хоро
 | Группа экранов | Коллекции |
 | --- | --- |
 | Splash, Onboarding, Introduce | — (локально) |
-| Login, Sign Up, OTP, User Information | Auth + `users` |
+| Login, Sign Up, User Information | Auth + `users` |
 | Face ID, Touch ID, PIN, Notification permission | `users`, `userSettings` |
 | Chats, Groups (списки и переписка) | `chats`, `members`, `messages` |
 | Звонки из чата | `calls` |
@@ -689,7 +689,7 @@ userChats/{userId}/items/{chatId}
 
 Чтобы закрыть основной flow макета:
 
-1. Auth: телефон + OTP (Login / Register)
+1. Auth: Login / Register
 2. `users` (имя, аватар, phone, eChatPublicId) + `userSettings`
 3. `chats` + `members` + `messages` (Chats + Groups)
 4. `contacts` (Add Friend)
@@ -722,6 +722,7 @@ userChats/{userId}/items/{chatId}
 ## Связанные документы
 
 - [firebase-setup.md](./firebase-setup.md) — rules, Functions, Auth
+- [firebase-registration.md](./firebase-registration.md) — реализация Sign Up
 - [firebase-events.md](./firebase-events.md) — как смотреть записи, логи, Analytics
 - [firebase-flutter-connect.md](./firebase-flutter-connect.md) — подключение SDK
-- [architecture.md](./architecture.md) · [roadmap.md](./roadmap.md)
+- [architecture_echat.md](./architecture_echat.md) · [roadmap.md](./roadmap.md)

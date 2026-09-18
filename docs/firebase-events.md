@@ -32,7 +32,7 @@
 | Тип события | Где смотреть | Когда нужно |
 | --- | --- | --- |
 | Документ создан / изменён / удалён | **Firestore → Data** | Отладка чатов, профилей, сообщений |
-| Пользователь зарегистрировался, OTP | **Authentication → Users** | Login / Register |
+| Пользователь зарегистрировался | **Authentication → Users** | Login / Register |
 | Online, last seen, «печатает» | **Realtime Database → Data** | Presence / typing |
 | Загрузка аватара, медиа | **Storage** | Файлы и URL в `users.photoUrl` |
 | `lastMessage`, `unreadCount`, FCM | **Functions → Logs** | Серверная логика после сообщения |
@@ -69,7 +69,7 @@
 
 **Authentication → Users**
 
-- появился пользователь после OTP;
+- появился пользователь;
 - `uid` совпадает с `users/{uid}` в Firestore;
 - провайдер — Phone.
 
@@ -249,7 +249,7 @@ await FirebaseAnalytics.instance.logEvent(
 
 | Событие | Когда |
 | --- | --- |
-| `sign_up` / `login` | успешный OTP |
+| `sign_up` / `login` | успешная авторизация |
 | `message_sent` | исходящее сообщение |
 | `chat_opened` | вход в conversation |
 | `call_started` | исходящий звонок |
@@ -345,6 +345,8 @@ Flutter указывает на эмулятор через `useFirestoreEmulato
 2. Firestore: `users/{uid}`, `userSettings/{uid}`.
 3. Лог `createUserSettings` / `onUserCreated`, если настройки создаёт функция.
 
+Как реализовать этот поток в коде (слои, DataSource, guard): [firebase-registration.md](./firebase-registration.md).
+
 ### 9.3. Online / typing
 
 1. Открыть чат — `/status/{uid}.online == true`.
@@ -393,9 +395,10 @@ Flutter указывает на эмулятор через `useFirestoreEmulato
 ## Связанные документы
 
 - [firebase-setup.md](./firebase-setup.md) — Auth, Firestore, Functions, чеклист проверки
+- [firebase-registration.md](./firebase-registration.md) — реализация регистрации
 - [firebase-database.md](./firebase-database.md) — коллекции, триггеры Functions
 - [firebase-flutter-connect.md](./firebase-flutter-connect.md) — инициализация SDK
-- [architecture.md](./architecture.md) — DataSource, стримы, без Firebase в UI
+- [architecture_echat.md](./architecture_echat.md) — DataSource, стримы, без Firebase в UI
 - [roadmap.md](./roadmap.md) — Analytics / Crashlytics в фазе 7
 
 Официально:

@@ -378,12 +378,12 @@ UI                  Freezed state / AsyncValue.when
 ### Notifier: fold (предпочтительно для форм)
 
 ```dart
-Future<void> submitOtp() async {
+Future<void> login() async {
   state = state.copyWith(isSubmitting: true, errorMessage: none());
 
-  final result = await ref.read(authRepositoryProvider).confirmOtp(
-        verificationId: state.verificationId,
-        code: state.code,
+  final result = await ref.read(authRepositoryProvider).login(
+        phone: state.phone,
+        password: state.password,
       );
 
   result.fold(

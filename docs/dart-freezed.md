@@ -166,13 +166,13 @@ abstract class Message with _$Message {
 
 ```dart
 @freezed
-abstract class OtpState with _$OtpState {
-  const factory OtpState({
-    required String verificationId,
-    @Default('') String code,
+abstract class LoginState with _$LoginState {
+  const factory LoginState({
+    required String phone,
+    @Default('') String password,
     @Default(false) bool isSubmitting,
     Option<String> errorMessage,
-  }) = _OtpState;
+  }) = _LoginState;
 }
 ```
 

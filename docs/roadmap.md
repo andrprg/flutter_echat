@@ -1,12 +1,14 @@
 # Roadmap — E-Chat (flutter_echat)
 
-План разработки мессенджера по UI-киту [Figma E-Chat](https://www.figma.com/design/Do69JP5vfRzBNw3OO2jRHH/Chatting-App-UI-Kit-Design-_-E-Chat-_-Figma--Community-), архитектуре [architecture.md](./architecture.md) и схеме [firebase-database.md](./firebase-database.md).
+План разработки мессенджера по UI-киту [Figma E-Chat](https://www.figma.com/design/Do69JP5vfRzBNw3OO2jRHH/Chatting-App-UI-Kit-Design-_-E-Chat-_-Figma--Community-), архитектуре [architecture_echat.md](./architecture_echat.md) и схеме [firebase-database.md](./firebase-database.md).
 
 **Целевые форм-факторы:** phone · tablet (≥600 dp) · desktop / wide (≥1024 dp: Windows, macOS, Linux, web).
 
-**UI-паттерн:** smart / dumb ([architecture.md §3](./architecture.md#3-умный--глупый-компонент)) — один Notifier на экран, разные layout-композиции глупых виджетов.
+**UI-паттерн:** smart / dumb ([architecture_echat.md §3](./architecture_echat.md#3-умный--глупый-компонент)) — один Notifier на подфичу-экран, разные layout-композиции глупых виджетов. Master–detail (list + thread на desktop): smart-shell компонует dumb из разных подпапок ([§4.3](./architecture_echat.md#43-masterdetail-chats--groups)).
 
-**Ошибки:** все через sealed `Failure` ([architecture.md §10](./architecture.md#10-ошибки-и-result)); `String` / `Option<String>` для ошибок не используются — только `Failure.displayMessage`.
+**Навигация:** только [`go_router`](https://pub.dev/packages/go_router) — `StatefulShellRoute`, `redirect`, deep links; не `auto_route` / ручной `Navigator` для feature-маршрутов.
+
+**Ошибки:** все через sealed `Failure` ([architecture_echat.md §10](./architecture_echat.md#10-ошибки-и-result)); `String` / `Option<String>` для ошибок не используются — только `Failure.displayMessage`.
 
 **Легенда:** `[ ]` — не начато · `[~]` — в работе · `[x]` — готово
 
@@ -21,7 +23,7 @@
 | ---- | -------------------------------- | ------------------------------------------------------------------ |
 | 0    | Фундамент                        | Структура, стек, adaptive shell, smart/dumb каркас                 |
 | 1    | Firebase & Core                  | Подключён Firebase, core-слой, rules                               |
-| 2    | Auth & Onboarding                | Splash → Login → OTP → Profile setup (все ширины)                  |
+| 2    | Auth & Onboarding                | Splash → Login → Profile setup (все ширины)                  |
 | 3    | Chats MVP                        | Список + переписка 1:1; phone stack / tablet–desktop master–detail |
 | 4    | Groups                           | Группы + split view на wide                                        |
 | 5    | Profile & More                   | Профиль, настройки; constrained layout на desktop                  |
@@ -42,8 +44,9 @@
 ### 0.1. Зависимости и codegen
 
 - [x] Добавить в `pubspec.yaml`: `flutter_riverpod`, riverpod_annotation, `freezed_annotation`, `json_annotation`, `fpdart`
+- [ ] Добавить в `pubspec.yaml`: `go_router`
 - [x] Dev: riverpod_generator, `freezed`, `build_runner`, `json_serializable`, `riverpod_lint` (≥3.1; **без** `custom_lint`)
-- [x] Добавить правила в cursor
+- [x] Добавить правила в cursor (в т.ч. `go-router.mdc`)
 - [x] Настроить `analysis_options.yaml`: `plugins: riverpod_lint: <version>` + exclude `*.g.dart` / `*.freezed.dart` ([analysis-options-riverpod-lint.md](./analysis-options-riverpod-lint.md))
 - [x] Проверить: `dart run build_runner build --delete-conflicting-outputs`
 - [x] Включить desktop targets: `flutter create --platforms=windows,macos,linux` (по необходимости) + web
@@ -52,40 +55,45 @@
 
 ### 0.2. Структура `lib/`
 
-- [ ] Создать `lib/app/` (`app.dart`, заготовка router)
-- [ ] Создать `lib/app/adaptive/` — `AppBreakpoint`, `appBreakpointProvider`, helpers
-- [ ] Создать `lib/core/error/failures.dart` (Freezed sealed `Failure`)
-- [ ] Создать `lib/shared/widgets/` (dumb-заглушки) и `lib/shared/layouts/` (`TwoPane`, `MaxWidthBox`)
-- [ ] Создать папки features: `onboarding`, `auth`, `chats`, `groups`, `profile`, `more`
+- [x] Создать `lib/src/app.dart` и каркас `lib/src/utils/`
+- [x] Создать `lib/src/utils/constants/` — цвета, размеры, breakpoints
+- [x] Создать `lib/src/utils/theme/` + `widget_themes/` (`TAppTheme`)
+- [x] Создать `lib/src/utils/providers/` — `appBreakpointProvider` + `ResponsiveBuilder`
+- [ ] Создать `lib/src/utils/router/` — конфиг `go_router` + shell
+- [ ] Создать `lib/src/utils/exceptions/failures.dart` (Freezed sealed `Failure`)
+- [ ] Создать `lib/src/shared/widgets/` (dumb-заглушки) и `lib/src/shared/layouts/` (`TwoPane`, `MaxWidthBox`)
+- [x] Создать папки features: `onboarding`, `auth`, `chats`, `groups`, `profile`, `more`
 - [ ] В каждом feature presentation: соглашение `*_screen.dart` (smart) + `*_view.dart` (dumb)
 
 
 
 ### 0.3. UI / Design system (dumb)
 
-- [ ] Перенести цвета E-Chat из Figma (Blue `#1565C0`, Light Blue `#40C4FF`, …)
+- [x] Перенести цвета E-Chat из Figma (Blue `#1565C0`, Light Blue `#40C4FF`, …)
 - [ ] Подключить шрифт **Roboto** (Google Fonts)
-- [ ] Базовые **dumb**-компоненты: `EChatButton`, `EChatTextField`, `EChatAppBar`, `EChatAvatar`
-- [ ] Тема Light / Dark (экран More → Dark Mode)
-- [ ] Density / spacing tokens с учётом desktop (чуть плотнее списки, `maxContentWidth`)
+- [ ] Базовые **dumb**-компоненты: `TChatButton`, `TTextField`, `TAppBar`, `TAvatar`
+- [x] Тема Light / Dark (`TAppTheme` + `widget_themes` по макету)
+- [x] Density / spacing tokens с учётом desktop (`TSizes` pane widths, `maxContentWidth`) — [layouts-tablet-desktop.md](./layouts-tablet-desktop.md), [mockups](./mockups/echat-tablet-desktop.html), [coverage](./mockups/coverage-vs-figma.md)
 
 
 
 ### 0.4. Навигация и adaptive shell
 
-- [ ] Выбрать router (`go_router` или `auto_route`)
-- [ ] **Phone:** Shell с нижней навигацией — Chats | Groups | Profile | More
+- [x] Выбран router: **`go_router`** (не `auto_route`) — правило `.cursor/rules/go-router.mdc`
+- [ ] `MaterialApp.router` + конфиг `GoRouter` в `lib/src/utils/router/app_router.dart`
+- [ ] **Phone:** `StatefulShellRoute` + нижняя навигация — Chats | Groups | Profile | More
 - [ ] **Tablet / Desktop:** Shell с `NavigationRail` / sidebar (те же 4 раздела)
 - [ ] Общие маршруты; shell выбирает chrome по `appBreakpointProvider`
-- [ ] Заготовки auth flow (guard: неавторизован → login)
-- [ ] Заготовка master–detail слота для `/chats` и `/groups` (wide)
+- [ ] `redirect`: auth flow (неавторизован → `/login`)
+- [ ] Заготовка master–detail слота для `/chats` и `/groups` (wide): route builders → будущий `ChatsShellScreen` / `GroupsShellScreen` ([architecture_echat.md §4.3](./architecture_echat.md#43-masterdetail-chats--groups))
 
 
 
 ### 0.5. Конвенции smart / dumb
 
-- [ ] Документировать в коде/README feature: smart не содержит тяжёлую вёрстку; dumb не импортирует Riverpod
-- [ ] Пример-эталон: один screen + view (например, заглушка ChatList)
+- [x] Документировать в коде/README feature: smart не содержит тяжёлую вёрстку; dumb не импортирует Riverpod
+- [x] Пример-эталон: один screen + view (например, заглушка ChatList)
+- [x] Для wide master–detail: эталон — smart-shell + два dumb из разных подпапок (см. [architecture_echat.md §4.3](./architecture_echat.md#43-masterdetail-chats--groups))
 
 ---
 
@@ -116,7 +124,6 @@
 - [ ] Создать **Firestore** (production mode)
 - [ ] Создать **Realtime Database**
 - [ ] Создать **Storage**
-- [ ] Добавить тестовые номера OTP (dev)
 
 
 
@@ -153,7 +160,7 @@
 
 ## Фаза 2 — Auth & Onboarding
 
-**Цель:** пользователь проходит путь из Figma: Loading → Introduce → Login/Sign Up → OTP → User Information → Security setup. На wide — центрированные формы (`MaxWidthBox`), без дублирования логики.
+**Цель:** пользователь проходит путь из Figma: Loading → Introduce → Login/Sign Up → User Information → Security setup. На wide — центрированные формы (`MaxWidthBox`), без дублирования логики.
 
 ### 2.1. Feature `onboarding`
 
@@ -179,20 +186,16 @@
 ### 2.3. Feature `auth` — Login / Register
 
 - [ ] **Login _ Empty / Typing / Filled** — dumb `LoginView`; smart `LoginScreen`
-- [x] **Register** — страница регистрации задокументирована в [architecture.md §3.5](./architecture.md#35-пример-страница-регистрации-auth--register): фича `features/auth/presentation/register/` — `RegisterScreen` (smart) + `RegisterView` (dumb) + `RegisterController` (`@riverpod`) + `RegisterState` (Freezed)
-- [ ] **Register UI** — реализация полей Name / Phone / Password, чекбокс Terms, кнопка Register; `submit()` → `authRepository.register(...)` → `/otp`
+- [x] **Register** — страница регистрации задокументирована в [architecture_echat.md §3.5](./architecture_echat.md#35-пример-страница-регистрации-auth--register): фича `features/auth/presentation/register/` — `RegisterScreen` (smart) + `RegisterView` (dumb) + `RegisterController` (`@riverpod`) + `RegisterState` (Freezed)
+- [x] **Register → Firebase** — поток Phone Auth + профиль: [firebase-registration.md](./firebase-registration.md)
+- [ ] **Register UI** — реализация полей Name / Phone / Password, чекбокс Terms, кнопка Register; `submit()` → `authRepository.signUp(...)` → `/home`
 - [ ] Checkbox **Remember me** → `SharedPreferences`
 - [ ] `LoginController` (@riverpod Notifier) + `LoginState` (Freezed) — один на все ширины
-- [ ] `verifyPhoneNumber` → переход на OTP
 - [ ] Wide: форма в колонке с max-width, не full-bleed phone layout
 
 
 
-### 2.4. Feature `auth` — OTP
-
-- [ ] **OTP Empty / Filled / Error / Resent Code** — `OtpScreen` (smart) + `OtpView` (dumb)
-- [ ] `OtpController` + `OtpState` (Freezed, ошибка через sealed `Failure`)
-- [ ] `signInWithCredential` → успех / Code Invalid
+### 2.4. Feature `auth` — Login
 
 
 
@@ -226,7 +229,7 @@
 
 ## Фаза 3 — Chats MVP (1:1)
 
-**Цель:** вкладка **Chats** — список, поиск, переписка, добавление друга. Phone: stack navigation. Tablet/Desktop: master–detail из одних dumb-view.
+**Цель:** вкладка **Chats** — список, поиск, переписка, добавление друга. Phone: stack (`/chats` → `/chats/:id`). Tablet/Desktop: master–detail — `ChatsShellScreen` компонует `ChatListView` + `ChatThreadView` из разных подпапок в `TwoPane` / `ThreePane` ([architecture_echat.md §4.3](./architecture_echat.md#43-masterdetail-chats--groups)).
 
 ### 3.1. Feature `chats` — domain & data
 
@@ -241,11 +244,14 @@
 
 ### 3.2. Список чатов
 
-- [ ] **Chats** — `ChatListScreen` (smart) + `ChatListView` (dumb): last message, time, unread
-- [ ] `chatListStreamProvider` (`@riverpod Stream<Either<Failure, List<Chat>>>`) + `ChatListController` (AsyncNotifier, подписка через `ref.watch` / `ref.onDispose`) — один на все форм-факторы
+- [ ] Подпапка `presentation/chat_list/`: `ChatListView` (dumb) + `ChatListController` + `ChatListState` (Freezed)
+- [ ] `ChatListScreen` (smart) — phone full-screen `/chats` и/или маппинг list→props внутри shell
+- [ ] `chatListStreamProvider` (`@riverpod Stream<Either<Failure, List<Chat>>>`) + `ChatListController` (AsyncNotifier, подписка через `ref.watch` / `ref.onDispose`) — **один** Notifier на все форм-факторы (не отдельный «для desktop»)
+- [ ] UI: last message, time, unread — как в Figma **Chats**
 - [ ] Pull-to-refresh (phone/tablet); на desktop — refresh action / focus shortcut
 - [ ] **Chats _ Click Search** — фильтрация по имени locally
 - [ ] **Chats _ Click Add** → меню Add Friend / Create Group
+- [ ] `onChatTap` → `context.go('/chats/$id')` (навигация только из smart / shell)
 
 
 
@@ -261,31 +267,37 @@
 
 ### 3.4. Экран переписки
 
-- [ ] **Chats _ Conversation** — `ChatThreadScreen` + `ChatThreadView` (reverse list)
-- [ ] Пузырьки incoming/outgoing, timestamp, status (sent/delivered/read) — shared dumb
+- [ ] Подпапка `presentation/chat_thread/`: `ChatThreadView` (dumb) + `ChatThreadController(chatId)` + `ChatThreadState`
+- [ ] `ChatThreadScreen` (smart) — phone full-screen `/chats/:id` и/или маппинг thread→props внутри shell
+- [ ] **Chats _ Conversation** — reverse list; пузырьки incoming/outgoing, timestamp, status (sent/delivered/read) — shared dumb
 - [ ] **Conversation _ Typing** — подписка RTDB typing
 - [ ] Composer: текст + Send; на desktop — Enter = send, Shift+Enter = newline
-- [ ] `ChatThreadController(chatId)` — optimistic send
+- [ ] Optimistic send в `ChatThreadController`
 - [ ] Pagination: `limit(40)` + load more
+- [ ] Не знать про список чатов и breakpoint внутри dumb-view
 
 
 
-### 3.5. Adaptive shell (chats)
+### 3.5. Adaptive shell (chats) — master–detail
 
-- [ ] `ChatsShellScreen` (smart): по breakpoint собирает layout
-- [ ] Phone: list → push thread
-- [ ] Tablet: `TwoPane` (list | thread), empty detail state
-- [ ] Desktop: list | thread | optional info pane (заглушка до фазы 5)
+- [ ] `presentation/shell/chats_shell_screen.dart` (SMART): `ref.watch` обоих controllers + `appBreakpointProvider` + `pathParameters['id']`
+- [ ] Собирает те же dumb: `ChatListView` + `ChatThreadView` (не копии UI под desktop)
+- [ ] **Phone:** `/chats` → только list; `/chats/:id` → только thread (push / один child)
+- [ ] **Tablet:** `TwoPane(master: list, detail: thread | EmptyChatPlaceholder)`
+- [ ] **Desktop:** list | thread | optional info pane (заглушка до фазы 5) через `ThreePane` при необходимости
+- [ ] Общие маршруты `/chats` и `/chats/:id`; на wide список **не** уезжает при выборе чата
 - [ ] Deep link `/chats/:id` корректно открывает detail на всех ширинах
-- [ ] Resize окна: сохранение `selectedChatId`, без потери scroll state где возможно
+- [ ] Resize окна: сохранение выбранного `chatId`, без потери scroll state где возможно
+- [ ] Не сливать list+thread в один Notifier/state «для desktop»
 
 
 
 ### 3.6. Shared UI (dumb)
 
-- [ ] `ChatBubble`, `MessageStatusIcon`, `ChatListTile`
+- [ ] `TChatBubble`, `TMessageStatusIcon`, `TChatListTile` (префикс `T`, файлы `t_*.dart`)
 - [ ] Empty state (нет чатов / не выбран чат на wide)
 - [ ] Shimmer / loading skeletons
+- [ ] `shared/layouts/`: `TwoPane`, `ThreePane` (если ещё нет с фазы 0)
 
 ---
 
@@ -293,7 +305,7 @@
 
 ## Фаза 4 — Groups
 
-**Цель:** вкладка **Groups** — список групп, создание, group chat; тот же master–detail паттерн, что у Chats.
+**Цель:** вкладка **Groups** — список групп, создание, group chat; тот же паттерн, что у Chats: `GroupsShellScreen` + dumb list/thread из разных подпапок ([architecture_echat.md §4.3](./architecture_echat.md#43-masterdetail-chats--groups)).
 
 ### 4.1. Создание группы
 
@@ -309,7 +321,7 @@
 
 - [ ] **Groups** — отдельная вкладка (фильтр `type == group`)
 - [ ] `GroupListController` (можно reuse ChatList с фильтром) + dumb `GroupListView`
-- [ ] `GroupsShellScreen` — master–detail на tablet/desktop
+- [ ] `GroupsShellScreen` — master–detail на tablet/desktop (`TwoPane`: group list | thread); phone — stack `/groups` → `/groups/:id`
 
 
 

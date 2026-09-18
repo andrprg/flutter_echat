@@ -258,7 +258,7 @@ class Scooter extends Vehicle {} // ERROR снаружи
 ### Когда `sealed`
 
 - ошибки / результат: `Failure`, `AuthState`
-- шаги флоу: OTP, загрузка сообщения
+- шаги флоу: Login, загрузка сообщения
 - любой closed union с полями (богаче, чем `enum`)
 
 ---
