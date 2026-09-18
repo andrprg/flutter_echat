@@ -44,7 +44,7 @@
 ### 0.1. Зависимости и codegen
 
 - [x] Добавить в `pubspec.yaml`: `flutter_riverpod`, riverpod_annotation, `freezed_annotation`, `json_annotation`, `fpdart`
-- [ ] Добавить в `pubspec.yaml`: `go_router`
+- [x] Добавить в `pubspec.yaml`: `go_router`
 - [x] Dev: riverpod_generator, `freezed`, `build_runner`, `json_serializable`, `riverpod_lint` (≥3.1; **без** `custom_lint`)
 - [x] Добавить правила в cursor (в т.ч. `go-router.mdc`)
 - [x] Настроить `analysis_options.yaml`: `plugins: riverpod_lint: <version>` + exclude `*.g.dart` / `*.freezed.dart` ([analysis-options-riverpod-lint.md](./analysis-options-riverpod-lint.md))
@@ -59,11 +59,11 @@
 - [x] Создать `lib/src/utils/constants/` — цвета, размеры, breakpoints
 - [x] Создать `lib/src/utils/theme/` + `widget_themes/` (`TAppTheme`)
 - [x] Создать `lib/src/utils/providers/` — `appBreakpointProvider` + `ResponsiveBuilder`
-- [ ] Создать `lib/src/utils/router/` — конфиг `go_router` + shell
-- [ ] Создать `lib/src/utils/exceptions/failures.dart` (Freezed sealed `Failure`)
-- [ ] Создать `lib/src/shared/widgets/` (dumb-заглушки) и `lib/src/shared/layouts/` (`TwoPane`, `MaxWidthBox`)
+- [x] Создать `lib/src/utils/router/` — конфиг `go_router` + shell
+- [x] Создать `lib/src/utils/exceptions/failures.dart` (Freezed sealed `Failure`)
+- [x] Создать `lib/src/shared/widgets/` (dumb-заглушки) и `lib/src/shared/layouts/` (`TwoPane`, `MaxWidthBox`)
 - [x] Создать папки features: `onboarding`, `auth`, `chats`, `groups`, `profile`, `more`
-- [ ] В каждом feature presentation: соглашение `*_screen.dart` (smart) + `*_view.dart` (dumb)
+- [x] В каждом feature presentation: соглашение `*_screen.dart` (smart) + `*_view.dart` (dumb)
 
 
 
