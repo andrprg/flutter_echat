@@ -7,6 +7,7 @@ import 'package:flutter_echat/src/utils/theme/widget_themes/switch_theme.dart';
 import 'package:flutter_echat/src/utils/theme/widget_themes/tabbar_theme.dart';
 import 'package:flutter_echat/src/utils/theme/widget_themes/text_field_theme.dart';
 import 'package:flutter_echat/src/utils/theme/widget_themes/text_theme.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../constants/colors.dart';
 
@@ -17,7 +18,7 @@ class TAppTheme {
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
-      fontFamily: 'Roboto',
+      fontFamily: GoogleFonts.roboto().fontFamily,
       brightness: Brightness.light,
       colorScheme: TColors.lightColorScheme,
       scaffoldBackgroundColor: TColors.white,
@@ -36,7 +37,7 @@ class TAppTheme {
   static ThemeData get darkTheme {
     return ThemeData(
       useMaterial3: true,
-      fontFamily: 'Roboto',
+      fontFamily: GoogleFonts.roboto().fontFamily,
       brightness: Brightness.dark,
       colorScheme: TColors.darkColorScheme,
       scaffoldBackgroundColor: TColors.neutral900Dark,

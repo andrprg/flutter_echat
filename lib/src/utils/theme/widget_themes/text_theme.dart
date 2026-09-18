@@ -1,71 +1,74 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../../constants/colors.dart';
 
 /// Тема типографики Roboto (Figma E-Chat).
+///
+/// Начертания из макета: Regular (400), SemiBold (600), Bold (700).
 class TTextTheme {
   TTextTheme._();
 
-  static TextTheme get lightTextTheme => const TextTheme(
-        headlineLarge: TextStyle(
+  static TextTheme get lightTextTheme => TextTheme(
+        headlineLarge: GoogleFonts.roboto(
           fontSize: 32,
-          fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.w700,
           color: TColors.neutral900,
         ),
-        headlineMedium: TextStyle(
+        headlineMedium: GoogleFonts.roboto(
           fontSize: 24,
           fontWeight: FontWeight.w600,
           color: TColors.neutral900,
         ),
-        titleLarge: TextStyle(
+        titleLarge: GoogleFonts.roboto(
           fontSize: 18,
           fontWeight: FontWeight.w600,
           color: TColors.neutral900,
         ),
-        bodyLarge: TextStyle(
+        bodyLarge: GoogleFonts.roboto(
           fontSize: 16,
-          fontWeight: FontWeight.normal,
+          fontWeight: FontWeight.w400,
           color: TColors.neutral900,
         ),
-        bodyMedium: TextStyle(
+        bodyMedium: GoogleFonts.roboto(
           fontSize: 14,
-          fontWeight: FontWeight.normal,
+          fontWeight: FontWeight.w400,
           color: TColors.neutral500,
         ),
-        labelLarge: TextStyle(
+        labelLarge: GoogleFonts.roboto(
           fontSize: 16,
           fontWeight: FontWeight.w600,
           color: TColors.white,
         ),
       );
 
-  static TextTheme get darkTextTheme => const TextTheme(
-        headlineLarge: TextStyle(
+  static TextTheme get darkTextTheme => TextTheme(
+        headlineLarge: GoogleFonts.roboto(
           fontSize: 32,
-          fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.w700,
           color: TColors.white,
         ),
-        headlineMedium: TextStyle(
+        headlineMedium: GoogleFonts.roboto(
           fontSize: 24,
           fontWeight: FontWeight.w600,
           color: TColors.white,
         ),
-        titleLarge: TextStyle(
+        titleLarge: GoogleFonts.roboto(
           fontSize: 18,
           fontWeight: FontWeight.w600,
           color: TColors.white,
         ),
-        bodyLarge: TextStyle(
+        bodyLarge: GoogleFonts.roboto(
           fontSize: 16,
-          fontWeight: FontWeight.normal,
+          fontWeight: FontWeight.w400,
           color: TColors.white,
         ),
-        bodyMedium: TextStyle(
+        bodyMedium: GoogleFonts.roboto(
           fontSize: 14,
-          fontWeight: FontWeight.normal,
+          fontWeight: FontWeight.w400,
           color: TColors.neutral300,
         ),
-        labelLarge: TextStyle(
+        labelLarge: GoogleFonts.roboto(
           fontSize: 16,
           fontWeight: FontWeight.w600,
           color: TColors.neutral900Dark,
