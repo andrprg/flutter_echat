@@ -5,7 +5,7 @@ globs:
   - "**/features/**/data/dto/**/*.dart"
   - "**/*_dto.dart"
   - "**/*_state.dart"
-  - "**/core/error/**/*.dart"
+  - "**/utils/exceptions/**/*.dart"
 alwaysApply: false
 ---
 
@@ -21,7 +21,7 @@ alwaysApply: false
 | DTO (Firestore) | да | да (`fromJson` / `toJson`) |
 | UI state | да | нет |
 | Failure | да (`@freezed sealed`) | нет |
-| Union (OTP step, auth flow) | да | нет |
+| Union (Auth flow) | да | нет |
 
 ## Паттерны
 
@@ -42,11 +42,11 @@ abstract class MessageDto with _$MessageDto {
 
 // UI state — freezed, без json; ошибки как Failure?
 @freezed
-abstract class OtpState with _$OtpState {
-  const factory OtpState({
-    @Default('') String code,
+abstract class LoginState with _$LoginState {
+  const factory LoginState({
+    @Default('') String email,
     Failure? error,
-  }) = _OtpState;
+  }) = _LoginState;
 }
 ```
 

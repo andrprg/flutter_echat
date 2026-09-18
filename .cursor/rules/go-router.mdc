@@ -1,0 +1,30 @@
+---
+description: Навигация только через go_router
+alwaysApply: true
+---
+
+# Навигация — go_router
+
+Единственный пакет навигации: **`go_router`**. Не `auto_route`, не ручной `Navigator` 2.0 / `onGenerateRoute` для новых маршрутов.
+
+## DO
+
+- `MaterialApp.router` + `GoRouter` в `lib/src/utils/router/`
+- Маршруты декларативно: `GoRoute`, вложенные routes, `StatefulShellRoute` для вкладок shell
+- Auth / onboarding guards — через `redirect` у `GoRouter`
+- Навигацию из smart: `context.go` / `context.push` / `ref.read(appRouterProvider).go(...)`
+- Deep links и path-параметры (`/chats/:id`) — через path/query `go_router`
+- Shell (bottom bar / rail) — одна конфигурация routes; chrome по `appBreakpointProvider`
+
+## DON'T
+
+- `auto_route`, `fluro`, самописный router поверх `Navigator`
+- `Navigator.push` / `MaterialPageRoute` для feature-экранов (кроме системных диалогов / bottom sheet)
+- Навигация из dumb (`*_view.dart`, `shared/widgets`) — только callbacks в smart
+- Отдельные деревья маршрутов «для tablet/desktop» — один `GoRouter`, композиция в `nav_shell.dart` или общих обёртках
+
+## Расположение
+
+- `lib/src/utils/router/app_router.dart` — конфиг `GoRouter` и Auth Guards
+- `lib/src/utils/router/nav_shell.dart` — SMART UI оболочка вкладок (bar/rail)
+- Провайдер роутера — `@Riverpod(keepAlive: true)` в `utils/providers/` (см. `riverpod`)

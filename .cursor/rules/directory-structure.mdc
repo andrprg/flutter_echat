@@ -1,40 +1,51 @@
 ---
-description: Структура каталогов lib/ feature-first (именование — в file-naming.mdc)
+description: Структура каталогов lib/src feature-first (именование — в file-naming.mdc)
 globs:
   - "**/features/**/*.dart"
-  - "**/app/**/*.dart"
+  - "**/src/**/*.dart"
   - "**/shared/**/*.dart"
-  - "**/core/**/*.dart"
+  - "**/utils/**/*.dart"
   - "**/lib/main.dart"
 alwaysApply: false
 ---
 
 # Структура каталогов
 
-Feature-first. Общее — только `app/`, `core/`, `shared/`. Именование файлов: правило `file-naming`.
+Feature-first. Код приложения — в `lib/src/`. Общее — `utils/` и `shared/`. Именование файлов: правило `file-naming`.
 
 ```
 lib/
 ├── main.dart
-├── app/                    # MaterialApp, router, adaptive, app providers
-│   ├── router/             # SMART shell (bottom bar / rail по breakpoint)
-│   ├── adaptive/           # AppBreakpoint, providers, helpers
-│   └── providers/
-├── core/                   # failures, extensions, utils, constants
-├── shared/
-│   ├── widgets/            # DUMB переиспользуемые виджеты
-│   ├── layouts/            # DUMB MaxWidthBox, TwoPane, ThreePane
-│   └── providers/          # firebase, shared services
-└── features/<feature>/
-    ├── domain/             # entities/, repositories/ (interfaces)
-    ├── data/               # datasources/, dto/, repositories/ (*_impl)
-    └── presentation/
-        └── <screen>/       # *_screen, *_view, *_controller, *_state
+└── src/
+    ├── app.dart                # MaterialApp, тема, router
+    ├── utils/
+    │   ├── exceptions/         # Failure / исключения
+    │   ├── constants/          # цвета, размеры, breakpoints
+    │   ├── device/             # функции устройства
+    │   ├── formatters/         # форматирование
+    │   ├── helpers/            # вспомогательные функции
+    │   ├── logging/            # логирование
+    │   ├── theme/              # TAppTheme + widget_themes/
+    │   ├── validators/         # валидаторы
+    │   ├── router/             # конфиг go_router, SMART UI shell
+    │   └── providers/          # общие Riverpod-провайдеры
+    ├── shared/
+    │   ├── widgets/            # DUMB переиспользуемые виджеты (класс T*, файл t_*)
+    │   └── layouts/            # DUMB общие обёртки
+    │       ├── max_width_box.dart   # MaxWidthBox
+    │       ├── two_pane.dart        # TwoPane (chats/groups shell)
+    │       └── three_pane.dart      # ThreePane
+    └── features/<feature>/
+        ├── domain/             # entities/, repositories/ (interfaces)
+        ├── data/               # datasources/, dto/, repositories/ (*_impl)
+        └── presentation/
+            └── <screen>/       # *_screen, *_view, *_controller, *_state
 ```
 
 ## Запрещено
 
-- Папки `mobile/` / `tablet/` / `desktop/` с копиями фич — только разные layout-композиции
+- Папки `mobile/` / `tablet/` / `desktop/` с копиями фич — только параметризованные dumb-компоненты и общие обёртки
 - Отдельный Notifier «для tablet/desktop»
 - Бизнес-код и Firebase в `shared/widgets` или dumb views
+- Старые корни `lib/app/`, `lib/core/` — не использовать; всё общее в `src/utils/`
 ---

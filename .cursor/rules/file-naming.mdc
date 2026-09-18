@@ -13,12 +13,23 @@ alwaysApply: true
 | --- | --- | --- |
 | Smart-экран | `{name}_screen.dart` | `chat_list_screen.dart` |
 | Dumb-view | `{name}_view.dart` | `chat_list_view.dart` |
-| Layout (dumb) | `{name}_layout.dart` | `chats_tablet_layout.dart` |
+| Layout (shared dumb) | `shared/layouts/{name}.dart` | `two_pane.dart` |
 | Notifier | `{name}_controller.dart` | `chat_list_controller.dart` |
 | UI state | `{name}_state.dart` | `chat_list_state.dart` |
-| Feature widget (dumb) | описательное имя | `chat_bubble.dart`, `chat_list_tile.dart` |
+| Feature / shared widget (dumb) | `t_{name}.dart` | `t_chat_button.dart`, `t_chat_bubble.dart` |
 
 Один экран = один префикс `{name}` для пары screen/view/controller/state.
+
+## Классы пользовательских виджетов
+
+Пользовательские (кастомные) виджеты — класс с префиксом **`T`** (PascalCase), файл — `t_*.dart`.
+
+| Роль | Класс | Файл |
+| --- | --- | --- |
+| Shared / design-system | `TChatButton`, `TAvatar`, `TTextField` | `t_chat_button.dart`, `t_avatar.dart`, `t_text_field.dart` |
+| Feature dumb (tile, bubble, …) | `TChatBubble`, `TChatListTile` | `t_chat_bubble.dart`, `t_chat_list_tile.dart` |
+
+Не относится к префиксу `T` у виджетов: `*_screen` / `*_view` / `*_controller` / root `EChatApp` / smart-helper `ResponsiveBuilder`. Классы темы и токенов (`TAppTheme`, `TColors`, `TAppBarTheme`, …) — префикс `T`, файлы в `src/utils/theme/` и `src/utils/constants/`.
 
 ## Domain / Data
 
@@ -43,4 +54,6 @@ alwaysApply: true
 - `chat_list_mobile.dart` / суффиксы `_tablet` / `_desktop` у controller/state/entity
 - Путать `_screen` (smart) и `_view` (dumb)
 - Называть impl без `_impl` или interface с `_impl`
+- Кастомные виджеты без префикса `T` (`ChatButton`, `EChatButton`) — только `TChatButton`
+- Файлы кастомных виджетов без `t_` (`chat_button.dart`, `echat_button.dart`) — только `t_chat_button.dart`
 ---

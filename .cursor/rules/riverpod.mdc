@@ -4,9 +4,10 @@ globs:
   - "**/*_controller.dart"
   - "**/*_provider.dart"
   - "**/features/**/presentation/**/*_screen.dart"
-  - "**/app/**/*.dart"
-  - "**/shared/providers/**/*.dart"
+  - "**/utils/providers/**/*.dart"
+  - "**/utils/router/**/*.dart"
   - "**/lib/main.dart"
+  - "**/src/app.dart"
 alwaysApply: false
 ---
 
@@ -41,6 +42,12 @@ class ChatListController extends _$ChatListController {
 }
 ```
 
+## Синхронизация со Stream
+
+- В Riverpod 3 метод `build()` не должен использовать ручные `StreamSubscription` и `ref.onDispose`.
+- Для реактивного обновления стейта из `Stream` используйте `ref.listen` (вне `build` он работает автоматически).
+- Для стартовой инициализации: `await ref.watch(myStreamProvider.future)`.
+
 ## Smart UI
 
 - `ConsumerWidget` / `ConsumerStatefulWidget`
@@ -53,4 +60,5 @@ class ChatListController extends _$ChatListController {
 - `StateNotifier` / `ChangeNotifier` для новых фич
 - `ref.watch` в dumb (`*_view.dart`, shared widgets)
 - Отдельный Notifier на phone/tablet/desktop
+- `StreamSubscription` с ручным `listen()` и `cancel()` внутри метода `build()`
 ---

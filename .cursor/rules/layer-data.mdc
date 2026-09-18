@@ -2,7 +2,7 @@
 description: Правила data-слоя — repositories impl, DTO, DataSources, Firebase
 globs:
   - "**/features/**/data/**/*.dart"
-  - "**/shared/providers/**/*.dart"
+  - "**/utils/providers/**/*.dart"
 alwaysApply: false
 ---
 
