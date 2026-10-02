@@ -2,7 +2,8 @@
 
 Источник phone: [Figma E-Chat, node 21-122](https://www.figma.com/design/Do69JP5vfRzBNw3OO2jRHH/Chatting-App-UI-Kit-Design-_-E-Chat-_-Figma--Community-?node-id=21-122)  
 Инвентарь: **89** уникальных фреймов × Light/Dark = **178** (в docs — 176–178).  
-HTML: [mockups/echat-tablet-desktop.html](./mockups/echat-tablet-desktop.html)
+HTML: [mockups/echat-tablet-desktop.html](./echat-tablet-desktop.html)  
+Auth Email/Password (адаптация Login/Register под стиль Figma): [auth-email.html](./auth-email.html) · [auth-email.md](./auth-email.md) · референс [ref-login-signup-phone.png](./ref-login-signup-phone.png)
 
 **Вердикт: покрыто ~8% уникальных экранов.** Сделаны только ключевые shell-раскладки и звонки 1:1; большая часть Figma ещё без tablet/desktop-макетов.
 
@@ -43,9 +44,9 @@ HTML: [mockups/echat-tablet-desktop.html](./mockups/echat-tablet-desktop.html)
 
 | Экран Figma | Статус |
 | --- | --- |
-| Login _ Empty / Typing / Filled | ✅ Login · Login 2 · Login 3 |
-| Sign Up _ * | ✅ Sign Up · Sign Up 2 · Sign Up 3 · Sign Up Err |
-| Verification _ Empty / Filled / Error / Resent | ❌ |
+| Login _ Empty / Typing / Filled | ✅ Login · Login 2 · Login 3 (+ [auth-email](./auth-email.html): Email/Password) |
+| Sign Up _ * | ✅ Sign Up · Sign Up 2 · Sign Up 3 · Sign Up Err (+ auth-email) |
+| Verification _ Empty / Filled / Error / Resent | ❌ (заменён на Email/Password; Forgot — в auth-email) |
 | Sign Up _ User Information | ❌ |
 
 ### Security
