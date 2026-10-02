@@ -7,7 +7,6 @@ import 'package:flutter_echat/src/utils/theme/widget_themes/switch_theme.dart';
 import 'package:flutter_echat/src/utils/theme/widget_themes/tabbar_theme.dart';
 import 'package:flutter_echat/src/utils/theme/widget_themes/text_field_theme.dart';
 import 'package:flutter_echat/src/utils/theme/widget_themes/text_theme.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../constants/colors.dart';
 
@@ -18,10 +17,10 @@ class TAppTheme {
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
-      fontFamily: GoogleFonts.roboto().fontFamily,
+      fontFamily: 'Roboto',
       brightness: Brightness.light,
       colorScheme: TColors.lightColorScheme,
-      scaffoldBackgroundColor: TColors.white,
+      scaffoldBackgroundColor: TColors.colorFFFFFFFF,
       bottomNavigationBarTheme:
           TBottomNavigatorBarTheme.lightBottomNavigatorBarTheme,
       inputDecorationTheme: TTextFormFieldTheme.lightInputDecorationTheme,
@@ -37,10 +36,10 @@ class TAppTheme {
   static ThemeData get darkTheme {
     return ThemeData(
       useMaterial3: true,
-      fontFamily: GoogleFonts.roboto().fontFamily,
+      fontFamily: 'Roboto',
       brightness: Brightness.dark,
       colorScheme: TColors.darkColorScheme,
-      scaffoldBackgroundColor: TColors.neutral900Dark,
+      scaffoldBackgroundColor: TColors.colorFF0D1217,
       bottomNavigationBarTheme:
           TBottomNavigatorBarTheme.darkBottomNavigatorBarTheme,
       inputDecorationTheme: TTextFormFieldTheme.darkInputDecorationTheme,
