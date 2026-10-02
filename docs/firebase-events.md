@@ -73,7 +73,7 @@
 - `uid` совпадает с `users/{uid}` в Firestore;
 - провайдер — Phone.
 
-**Authentication → Settings → Authorized domains** — если Phone Auth или web-сборка падают на домене.
+**Authentication → Settings → Authorized domains** — если web-сборка или OAuth/email-link провайдеры падают на домене.
 
 ### 2.3. Realtime Database
 

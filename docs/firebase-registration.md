@@ -70,23 +70,12 @@ Login использует тот же Auth; отличие Register — пос�
 ### 4.1. Entities
 
 ```dart
-// phone_auth_session.dart
-@freezed
-abstract class PhoneAuthSession with _$PhoneAuthSession {
-  const factory PhoneAuthSession({
-    required String verificationId,
-    int? forceResendingToken,
-  }) = _PhoneAuthSession;
-}
-```
-
-```dart
 // auth_user.dart
 @freezed
 abstract class AuthUser with _$AuthUser {
   const factory AuthUser({
     required String uid,
-    String? phoneNumber,
+    String? email,
   }) = _AuthUser;
 }
 ```
@@ -121,7 +110,7 @@ abstract class AuthRepository {
 
 Файл: `features/auth/data/datasources/auth_remote_datasource.dart`.
 
-`verifyPhoneNumber` асинхронный с несколькими колбэками — удобно обернуть в `Completer` / `TaskEither`:
+Методы Email/Password в Firebase Auth возвращают `Future<UserCredential>` — колбэков верификации, как у Phone Auth, нет:
 
 ```dart
 class AuthRemoteDataSource {
@@ -169,8 +158,7 @@ await FirebaseAuth.instance.useAuthEmulator('localhost', 9099);
 Future<void> createUserProfile({
   required String uid,
   required String displayName,
-  required String phoneE164,
-  required String phoneCountryCode,
+  required String email,
   String? photoUrl,
 }) async {
   final publicId =
@@ -179,12 +167,11 @@ Future<void> createUserProfile({
   await FirebaseFirestore.instance.collection('users').doc(uid).set({
     'id': uid,
     'displayName': displayName,
-    'phone': phoneE164,
-    'phoneCountryCode': phoneCountryCode,
+    'email': email,
     'eChatPublicId': publicId,
     'photoUrl': photoUrl,
     'about': 'Hey there! I am using E-Chat',
-    'searchTokens': _buildSearchTokens(displayName, phoneE164),
+    'searchTokens': _buildSearchTokens(displayName, email),
     'isOnline': false,
     'lastSeenAt': FieldValue.serverTimestamp(),
     'showLastSeen': true,
@@ -243,7 +230,7 @@ Future<Either<Failure, AuthUser>> register({
       if (user == null) {
         throw StateError('null user after signIn');
       }
-      return AuthUser(uid: user.uid, phoneNumber: user.phoneNumber);
+      return AuthUser(uid: user.uid, email: user.email);
     },
     (e, _) => _mapAuthFailure(e),
   ).run();
@@ -332,21 +319,14 @@ redirect: (context, state) {
 
 Чеклист:
 
-- [ ] Тестовый номер → код → пользователь в Auth
-- [ ] Повторный вход тем же номером не дублирует Auth user
-- [ ] После User Information есть `users/{uid}` с `displayName`, `phone`, `eChatPublicId`
+- [ ] Тестовый email + пароль → пользователь в Auth
+- [ ] Повторная регистрация на тот же email → ошибка `email-already-in-use`
+- [ ] После User Information есть `users/{uid}` с `displayName`, `email`, `eChatPublicId`
 - [ ] Без auth запись в `users` даёт `PERMISSION_DENIED`
 - [ ] Guard: выход → `/login`; вход без профиля → `/signup/profile`
 
 ---
 
-## 12. Типичные ошибки
-
-| Симптом | Причина / решение |
-| --- | --- |
-| `invalid-app-credential` | Нет SHA-1/SHA-256 в Console |
-| Слишком много попыток | Подождать или очистить квоту |
-| `PERMISSION_DENIED` на `users` | Rules или запись до `signInWithCredential` |
 ## 12. Типичные ошибки
 
 | Ошибка / Симптом | Решение |

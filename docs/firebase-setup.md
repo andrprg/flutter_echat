@@ -134,7 +134,7 @@ plugins {
 }
 ```
 
-Для **phone auth** на Android поднимите `minSdk` минимум до **23** в `android/app/build.gradle.kts`:
+Для **Firebase Auth** на Android поднимите `minSdk` минимум до **23** в `android/app/build.gradle.kts`:
 
 ```kotlin
 defaultConfig {
@@ -236,12 +236,11 @@ abstract final class FirestorePaths {
 ### 7.1. Console
 
 1. **Build → Authentication → Sign-in method**
-2. Включите **Phone**
-3. Для тестов: **Phone numbers for testing** — добавьте номер и фиксированный код (например `+44 7911 123456` / `123456`)
+2. Включите **Email/Password** (провайдер «Email/Password», без passwordless «Email link»)
 
 ### 7.2. Android — SHA-1 / SHA-256
 
-Phone Auth на Android требует отпечатки сертификата:
+Для Email/Password отпечатки **не требуются**; SHA-1/SHA-256 понадобятся, если позже добавите Google Sign-In:
 
 ```bash
 cd android
@@ -253,16 +252,15 @@ cd android
 
 ### 7.3. iOS
 
-1. В Xcode включите **Push Notifications** capability (нужно для silent push при верификации номера).
-2. Загрузите **APNs key** в Firebase: **Project settings → Cloud Messaging → Apple app configuration**.
+Для Email/Password дополнительной настройки не нужно. **Push Notifications** capability и **APNs key** понадобятся позже для FCM (push-уведомления): **Project settings → Cloud Messaging → Apple app configuration**.
 
 ### 7.4. Поток в приложении (соответствие экранам Figma)
 
 ```
-Login _ Empty / Sign Up _ Empty
-    → verifyPhoneNumber(phone)
-Login / Sign Up
-    → signInWithCredential(PhoneAuthProvider.credential)
+Login _ Empty
+    → signInWithEmailAndPassword(email, password)
+Register
+    → createUserWithEmailAndPassword(email, password)
 Sign Up _ User Information
     → создать документ users/{uid} + userSettings/{uid}
 Set Face ID / Touch ID / PIN
@@ -272,18 +270,16 @@ Set Face ID / Touch ID / PIN
 Пример вызова:
 
 ```dart
-await FirebaseAuth.instance.verifyPhoneNumber(
-  phoneNumber: '$phoneCountryCode$nationalNumber',
-  verificationCompleted: (credential) async {
-    await FirebaseAuth.instance.signInWithCredential(credential);
-  },
-  verificationFailed: (e) {
-    // UI: Code Invalid
-  },
-  codeSent: (verificationId, forceResendingToken) {
-    // UI: Login
-  },
-  codeAutoRetrievalTimeout: (verificationId) {},
+// Регистрация
+final cred = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+  email: email,
+  password: password,
+);
+
+// Вход
+await FirebaseAuth.instance.signInWithEmailAndPassword(
+  email: email,
+  password: password,
 );
 ```
 
@@ -293,8 +289,7 @@ await FirebaseAuth.instance.verifyPhoneNumber(
 await FirebaseFirestore.instance.collection('users').doc(uid).set({
   'id': uid,
   'displayName': name,
-  'phone': fullPhone,
-  'phoneCountryCode': countryCode,
+  'email': email,
   'eChatPublicId': 'ECHAT-${uid.substring(0, 6).toUpperCase()}',
   'photoUrl': null,
   'about': 'Hey there! I am using E-Chat',
@@ -884,7 +879,7 @@ firebase deploy --only functions
 | Симптом | Решение |
 | --- | --- |
 | `API key not valid` | Перезапустите `flutterfire configure`, проверьте `google-services.json` |
-| Phone Auth `invalid-app-credential` | Добавьте SHA-1/SHA-256 в Firebase Console |
+| Auth `email-already-in-use` / `wrong-password` | Маппинг кодов `FirebaseAuthException` → `Failure` (см. [firebase-registration.md §5](./firebase-registration.md#5-data--authremotedatasource)) |
 | `PERMISSION_DENIED` в Firestore | Проверьте `firestore.rules`, авторизован ли пользователь |
 | Запрос чатов без индекса | Выполните `firebase deploy --only firestore:indexes` |
 | `unreadCount` не обновляется | Реализуйте Cloud Function; клиент не может писать поле (rules) |
@@ -901,18 +896,18 @@ firebase deploy --only functions
 ## Связанные документы
 
 - [Структура базы данных E-Chat](./firebase-database.md) — поля коллекций, индексы, MVP
-- [Регистрация в Firebase](./firebase-registration.md) — Phone Auth, профиль, слои приложения
+- [Регистрация в Firebase](./firebase-registration.md) — Email/Password, профиль, слои приложения
 - [Отслеживание событий Firebase](./firebase-events.md) — Console, Functions Logs, Analytics
 - [Подключение Flutter](./firebase-flutter-connect.md) — `flutterfire configure`, `main.dart`
 - [FlutterFire documentation](https://firebase.google.com/docs/flutter/setup)
-- [Phone Auth Flutter](https://firebase.google.com/docs/auth/flutter/phone-auth)
+- [Email/Password Auth Flutter](https://firebase.google.com/docs/auth/flutter/password-auth)
 
 ---
 
 ## Рекомендуемый порядок работ
 
 1. `flutterfire configure` + зависимости + `main.dart`
-2. Phone Auth + создание `users` / `userSettings` — [firebase-registration.md](./firebase-registration.md)
+2. Email/Password Auth + создание `users` / `userSettings` — [firebase-registration.md](./firebase-registration.md)
 3. Firestore rules + indexes
 4. Чаты и сообщения (MVP Chats / Groups)
 5. RTDB presence + typing

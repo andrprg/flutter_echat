@@ -1683,7 +1683,7 @@ flowchart TB
 - [roadmap.md](./roadmap.md) — фазы, включая adaptive UI
 - [firebase-database.md](./firebase-database.md) — модели Firestore для DTO/Entity
 - [firebase-setup.md](./firebase-setup.md) — Auth, rules, Functions
-- [firebase-registration.md](./firebase-registration.md) — Sign Up: Phone Auth, профиль, guard
+- [firebase-registration.md](./firebase-registration.md) — Sign Up: Email/Password, профиль, guard
 - [firebase-flutter-connect.md](./firebase-flutter-connect.md) — инициализация Firebase в `main.dart`
 - [firebase-events.md](./firebase-events.md) — Console, логи Functions, `snapshots()`, Analytics
 - [Riverpod 3 docs](https://riverpod.dev/)

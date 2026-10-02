@@ -124,8 +124,8 @@ reports/{reportId}
 | `username` | `string` | нет | Уникальный @username для поиска |
 | `usernameLower` | `string` | нет | `username` в нижнем регистре (поиск) |
 | `email` | `string \| null` | нет | Email, если вход по почте |
-| `phone` | `string \| null` | нет | E.164, например `+442012345629` |
-| `phoneCountryCode` | `string` | да | Код страны из селектора (+44, +7…) |
+| `phone` | `string \| null` | нет | E.164, например `+442012345629`; пусто при входе по email |
+| `phoneCountryCode` | `string \| null` | нет | Код страны из селектора (+44, +7…); пусто при входе по email |
 | `eChatPublicId` | `string` | да | Публичный ID для копирования (экран User Information) |
 | `photoUrl` | `string \| null` | нет | URL аватара в Storage |
 | `coverUrl` | `string \| null` | нет | Обложка профиля |
@@ -690,7 +690,7 @@ userChats/{userId}/items/{chatId}
 Чтобы закрыть основной flow макета:
 
 1. Auth: Login / Register
-2. `users` (имя, аватар, phone, eChatPublicId) + `userSettings`
+2. `users` (имя, аватар, email, eChatPublicId) + `userSettings`
 3. `chats` + `members` + `messages` (Chats + Groups)
 4. `contacts` (Add Friend)
 5. `calls` (аудио/видео из чата)
