@@ -70,7 +70,7 @@
 | 4 | Группы · переписка | `Groups _ Conversation.png` | TwoPane; отправители цветом, карточка документа |
 | 5 | Профиль | `Profile.png` | одна колонка, MaxWidthBox 560 |
 | 6 | Ещё (More) | `More.png` | MaxWidthBox 560, полное меню |
-| 7 | Login | `Login _ Empty.png` | Tablet: карточка 480 · Desktop: split |
+| 7 | Login (email + пароль) | `Login _ Empty.png` | Tablet: карточка 480 · Desktop: split; вход по email и паролю, без соцкнопок |
 | 8 | Onboarding | `Introduce _ Step 1.png` | центрированная композиция 440 |
 | 9 | Add Friend | `Add Function _ Add Friend.png` | bottom sheet → centered dialog 480 |
 | 10 | Входящий звонок | `Chats _ Call.png` | Tablet: full overlay · Desktop: панель 420×780 |
@@ -100,3 +100,5 @@
 | `index.html` | Просмотрщик: список экранов, переключатели форм-фактора/темы, масштабирование |
 | `tokens.css` | Токены Light/Dark (зеркало `echat_colors.dart`) + стили компонентов |
 | `screens.js` | Рендер-функции 12 экранов + реестр |
+
+Логотипы в макетах — файлы из [assets/logos/](../../assets/logos): `logo_echat_light/dark.png` (знак + wordmark, 465×158) в сайдбаре и на экране авторизации, `logo_light/dark.png` (знак, 174×158) в rail и empty-state. Версия под тему переключается классами `logo-l` / `logo-d` (см. `tokens.css`).

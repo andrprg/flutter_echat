@@ -1,7 +1,7 @@
 /* ==========================================================================
    E-Chat · Tablet & Desktop mockups — токены и компоненты
    Источник токенов: docs/echat_colors.dart (Figma Design Tokens)
-   Макетный текст — на английском (язык оригинального кита), комментарии — RU.
+   Макетный текст — на английском (язык оригинального кита), auth — на русском; комментарии — RU.
    ========================================================================== */
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -102,7 +102,6 @@ body {
 }
 .app svg { display: block; }
 .ic { stroke: currentColor; fill: none; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
-.ic-fill { fill: currentColor; stroke: none; }
 
 /* --------------------------------------------------------------------------
    Навигационный chrome: rail (tablet) / sidebar (desktop)
@@ -124,13 +123,15 @@ body {
   display: flex; align-items: center; gap: 12px;
   padding: 4px 12px 20px;
 }
-.brand-name { font-size: 20px; font-weight: 700; letter-spacing: .2px; color: var(--primary); }
-
 .logo-badge {
   width: 40px; height: 40px; border-radius: 12px; flex: none;
   display: grid; place-items: center; color: #fff;
 }
-.logo-badge.sm { width: 32px; height: 32px; border-radius: 10px; }
+
+/* Логотипы бренда (assets/logos): версия под тему фрейма */
+.logo-img { display: block; object-fit: contain; }
+.frame[data-theme="light"] .logo-d { display: none; }
+.frame[data-theme="dark"] .logo-l { display: none; }
 
 .dest {
   display: flex; align-items: center; gap: 12px;
@@ -474,6 +475,9 @@ body {
 .input:focus-within { border-color: var(--secondary); border-width: 2px; padding: 12.5px 13.5px; }
 .input input { flex: 1; border: 0; outline: 0; background: none; font: inherit; color: var(--on-surface); }
 .input input::placeholder { color: var(--on-variant); }
+
+.auth-forgot { text-align: right; margin-top: 10px; }
+.auth-forgot a { color: var(--primary); font-size: 13.5px; font-weight: 600; text-decoration: none; }
 
 .btn-primary {
   width: 100%; border: 0; cursor: pointer; font: inherit;

@@ -2,7 +2,8 @@
    E-Chat · Tablet & Desktop mockups — рендер экранов
    Каждый экран — функция render(ff), ff = 'tablet' | 'desktop'.
    Тема применяется через data-theme на .frame (см. tokens.css).
-   Тексты UI — на английском (язык оригинального Figma-кита).
+   Тексты UI — на английском (язык оригинального Figma-кита);
+   форма авторизации — на русском (целевая локаль приложения).
    ========================================================================== */
 
 /* ---------------------------------------------------------------- Иконки */
@@ -42,13 +43,33 @@ const ICONS = {
   logout: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/>',
   chevR: '<path d="M9 18l6-6-6-6"/>',
   lock: '<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+  mail: '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 6l-10 7L2 6"/>',
   speaker: '<path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>',
-  google: '<path fill="#4285F4" d="M23.5 12.27c0-.85-.08-1.66-.22-2.45H12v4.64h6.45a5.52 5.52 0 0 1-2.39 3.62v3h3.87c2.26-2.09 3.57-5.17 3.57-8.81z"/><path fill="#34A853" d="M12 24c3.24 0 5.96-1.07 7.94-2.91l-3.87-3c-1.07.72-2.44 1.15-4.07 1.15-3.13 0-5.78-2.11-6.73-4.96H1.29v3.1A12 12 0 0 0 12 24z"/><path fill="#FBBC05" d="M5.27 14.28A7.2 7.2 0 0 1 4.89 12c0-.79.14-1.56.38-2.28v-3.1H1.29a12 12 0 0 0 0 10.76l3.98-3.1z"/><path fill="#EA4335" d="M12 4.77c1.76 0 3.34.61 4.58 1.8l3.44-3.44A11.98 11.98 0 0 0 12 0 12 12 0 0 0 1.29 6.62l3.98 3.1c.95-2.85 3.6-4.95 6.73-4.95z"/>',
 };
 
-/** svg-обёртка для глифа; fill=true — иконки с собственной заливкой (Google) */
-function ic(name, size = 24, fill = false) {
-  return `<svg class="${fill ? 'ic-fill' : 'ic'}" width="${size}" height="${size}" viewBox="0 0 24 24">${ICONS[name]}</svg>`;
+/** svg-обёртка для глифа */
+function ic(name, size = 24) {
+  return `<svg class="ic" width="${size}" height="${size}" viewBox="0 0 24 24">${ICONS[name]}</svg>`;
+}
+
+/* ---------------------------------------------------------------- Логотип */
+/* Файлы бренда из assets/logos: знак (174×158) и знак + wordmark (465×158).
+   Версия под тему переключается классами logo-l / logo-d (см. tokens.css). */
+const LOGO_DIR = '../../assets/logos';
+
+/** Знак логотипа без подписи — rail, empty-state */
+function logoMark(size) {
+  const h = Math.round(size * 158 / 174);
+  return `<img class="logo-img logo-l" src="${LOGO_DIR}/logo_light.png" width="${size}" height="${h}" alt="E-Chat" />`
+    + `<img class="logo-img logo-d" src="${LOGO_DIR}/logo_dark.png" width="${size}" height="${h}" alt="E-Chat" />`;
+}
+
+/** Логотип с подписью E-CHAT; forceDark — на цветных панелях (фон всегда тёмный) */
+function logoFull(height, forceDark = false) {
+  const w = Math.round(height * 465 / 158);
+  if (forceDark) return `<img class="logo-img" src="${LOGO_DIR}/logo_echat_dark.png" width="${w}" height="${height}" alt="E-Chat" />`;
+  return `<img class="logo-img logo-l" src="${LOGO_DIR}/logo_echat_light.png" width="${w}" height="${height}" alt="E-Chat" />`
+    + `<img class="logo-img logo-d" src="${LOGO_DIR}/logo_echat_dark.png" width="${w}" height="${height}" alt="E-Chat" />`;
 }
 
 /* ---------------------------------------------------------------- Аватары */
@@ -93,14 +114,14 @@ function chrome(active, ff) {
   ];
   if (ff === 'tablet') {
     return `<nav class="rail">
-      <div class="logo-badge grad-blue">${ic('chat', 20)}</div>
+      ${logoMark(40)}
       ${dests.map(d => `<button class="dest ${d.id === active ? 'active' : ''}" title="${d.label}">${ic(d.icon, 24)}</button>`).join('')}
       <div class="spacer"></div>
       ${av('John Doe', 40)}
     </nav>`;
   }
   return `<nav class="sidebar">
-    <div class="brand"><div class="logo-badge sm grad-blue">${ic('chat', 16)}</div><span class="brand-name">E-Chat</span></div>
+    <div class="brand">${logoFull(34)}</div>
     ${dests.map(d => `<button class="dest ${d.id === active ? 'active' : ''}">${ic(d.icon, 22)}<span class="lbl">${d.label}</span>${d.id === 'chats' ? '<span class="badge">9</span>' : ''}</button>`).join('')}
     <div class="spacer"></div>
     <button class="dest">${ic('moon', 22)}<span class="lbl">Dark Mode</span></button>
@@ -178,7 +199,7 @@ function chatBar(name, status, opts = {}) {
 /** Пустое состояние detail (чат не выбран) */
 function emptyDetail() {
   return `<div class="empty-detail">
-    <div class="art grad-blue">${ic('chat', 56)}</div>
+    <div class="art" style="background:none;box-shadow:none">${logoMark(132)}</div>
     <h2>Select a chat</h2>
     <p>Pick a conversation from the list to start messaging, or create a new one.</p>
   </div>`;
@@ -344,18 +365,18 @@ function screenMore(ff) {
   </section>`;
 }
 
-/** Форма логина — общая для карточки и split */
+/** Форма логина — общая для карточки и split; вход по email и паролю */
 function loginForm() {
-  return `<div style="display:flex;align-items:center;gap:10px"><div class="logo-badge grad-blue">${ic('chat', 20)}</div><span class="brand-name">E-Chat</span></div>
-  <h2>Login to your account</h2>
-  <div class="sub">Welcome back! Please enter your phone number.</div>
-  <label class="field-label">Phone Number</label>
-  <div class="input">${ic('phone', 18)}<input placeholder="Phone Number" /></div>
-  <button class="btn-primary">Next</button>
-  <div class="divider-or">Or sign in with</div>
-  <button class="btn-outline">${ic('google', 20, true)}Google</button>
-  <button class="btn-outline">${ic('phone', 18)}Phone</button>
-  <div class="auth-foot">Don't have an account? <a href="#">Sign up</a></div>`;
+  return `${logoFull(40)}
+  <h2>Добро пожаловать</h2>
+  <div class="sub">Войдите в свой аккаунт</div>
+  <label class="field-label">Email</label>
+  <div class="input">${ic('mail', 18)}<input type="email" placeholder="you@example.com" /></div>
+  <label class="field-label" style="margin-top:16px">Пароль</label>
+  <div class="input">${ic('lock', 18)}<input type="password" placeholder="••••••••" /></div>
+  <div class="auth-forgot"><a href="#">Забыли пароль?</a></div>
+  <button class="btn-primary">Войти</button>
+  <div class="auth-foot">Нет аккаунта? <a href="#">Создать</a></div>`;
 }
 
 /** 7. Auth — Login: tablet portrait — карточка 480; desktop и tablet landscape (1024) — split brand + форма */
@@ -365,7 +386,7 @@ function screenAuthLogin(ff) {
       <div class="auth-brand grad-blue">
         <div class="deco" style="width:220px;height:220px;top:-70px;right:-60px;transform:rotate(24deg)"></div>
         <div class="deco" style="width:140px;height:140px;top:120px;right:60px;transform:rotate(-14deg);background:rgba(255,255,255,.07)"></div>
-        <div style="display:flex;align-items:center;gap:12px"><div class="logo-badge" style="background:rgba(255,255,255,.16)">${ic('chat', 20)}</div><span style="font-size:20px;font-weight:700">E-Chat</span></div>
+        <div>${logoFull(44, true)}</div>
         <h1>Connect with friends, anywhere.</h1>
         <p>Fast, simple and secure messaging — now on the big screen.</p>
       </div>
@@ -486,7 +507,7 @@ const SCREENS = [
     note: 'Профильная карточка-строка + полное меню настроек в MaxWidthBox 560',
     render: screenMore },
   { id: 'auth-login', group: 'Авторизация', title: 'Login',
-    note: 'Tablet portrait: карточка 480 по центру · Tablet landscape / Desktop: split — brand-панель ≤40% + форма 440',
+    note: 'Вход по email и паролю, без соцкнопок · Tablet portrait: карточка 480 · Tablet landscape / Desktop: split — brand ≤40% + форма 440',
     render: screenAuthLogin },
   { id: 'auth-onboarding', group: 'Авторизация', title: 'Onboarding',
     note: 'Центрированная композиция max 440 на обоих форм-факторах',
