@@ -7,14 +7,14 @@ class TSnackBarTheme {
   TSnackBarTheme._();
 
   static const SnackBarThemeData lightSnackBarTheme = SnackBarThemeData(
-    backgroundColor: TColors.neutral900,
-    contentTextStyle: TextStyle(color: TColors.white),
+    backgroundColor: TColors.colorFF2C2D3A,
+    contentTextStyle: TextStyle(color: TColors.colorFFFFFFFF),
     behavior: SnackBarBehavior.floating,
   );
 
   static const SnackBarThemeData darkSnackBarTheme = SnackBarThemeData(
-    backgroundColor: TColors.neutral800,
-    contentTextStyle: TextStyle(color: TColors.white),
+    backgroundColor: TColors.colorFF393A4C,
+    contentTextStyle: TextStyle(color: TColors.colorFFFFFFFF),
     behavior: SnackBarBehavior.floating,
   );
 }

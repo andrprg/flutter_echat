@@ -10,16 +10,16 @@ class TAppBarTheme {
   static const AppBarTheme lightAppBarTheme = AppBarTheme(
     elevation: 0,
     centerTitle: true,
-    backgroundColor: TColors.white,
-    foregroundColor: TColors.neutral900,
+    backgroundColor: TColors.colorFFFFFFFF,
+    foregroundColor: TColors.colorFF2C2D3A,
     systemOverlayStyle: SystemUiOverlayStyle.dark,
   );
 
   static const AppBarTheme darkAppBarTheme = AppBarTheme(
     elevation: 0,
     centerTitle: true,
-    backgroundColor: TColors.neutral900Dark,
-    foregroundColor: TColors.white,
+    backgroundColor: TColors.colorFF0D1217,
+    foregroundColor: TColors.colorFFFFFFFF,
     systemOverlayStyle: SystemUiOverlayStyle.light,
   );
 }
