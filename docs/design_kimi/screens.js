@@ -365,22 +365,34 @@ function screenMore(ff) {
   </section>`;
 }
 
-/** Форма логина — общая для карточки и split; вход по email и паролю */
-function loginForm() {
+/** Форма логина — общая для карточки и split; вход по email и паролю.
+    opts.loading — отправка формы: поля disabled, на кнопке индикатор загрузки
+    (соответствует TButtons isLoading — CircularProgressIndicator вместо лейбла) */
+function loginForm(opts = {}) {
+  const loading = opts.loading === true;
+  const disCls = loading ? ' disabled' : '';
+  const disAttr = loading ? ' disabled' : '';
+  // В состоянии отправки поля показаны заполненными (пользователь уже ввёл данные)
+  const emailVal = loading ? ' value="you@example.com"' : '';
+  const passVal = loading ? ' value="password123"' : '';
+  const btn = loading
+    ? '<button class="btn-primary loading" disabled><span class="spinner"></span></button>'
+    : '<button class="btn-primary">Войти</button>';
   return `${logoFull(40)}
   <h2>Добро пожаловать</h2>
   <div class="sub">Войдите в свой аккаунт</div>
   <label class="field-label">Email</label>
-  <div class="input">${ic('mail', 18)}<input type="email" placeholder="you@example.com" /></div>
+  <div class="input${disCls}">${ic('mail', 18)}<input type="email" placeholder="you@example.com"${emailVal}${disAttr} /></div>
   <label class="field-label" style="margin-top:16px">Пароль</label>
-  <div class="input">${ic('lock', 18)}<input type="password" placeholder="••••••••" /></div>
+  <div class="input${disCls}">${ic('lock', 18)}<input type="password" placeholder="••••••••"${passVal}${disAttr} /></div>
   <div class="auth-forgot"><a href="#">Забыли пароль?</a></div>
-  <button class="btn-primary">Войти</button>
+  ${btn}
   <div class="auth-foot">Нет аккаунта? <a href="#">Создать</a></div>`;
 }
 
-/** 7. Auth — Login: tablet portrait — карточка 480; desktop и tablet landscape (1024) — split brand + форма */
-function screenAuthLogin(ff) {
+/** 7. Auth — Login: tablet portrait — карточка 480; desktop и tablet landscape (1024) — split brand + форма.
+    loading=true — состояние отправки формы (на кнопке спиннер, поля заблокированы) */
+function screenAuthLogin(ff, loading = false) {
   if (ff !== 'tablet') {
     return `<section class="auth">
       <div class="auth-brand grad-blue">
@@ -390,13 +402,13 @@ function screenAuthLogin(ff) {
         <h1>Connect with friends, anywhere.</h1>
         <p>Fast, simple and secure messaging — now on the big screen.</p>
       </div>
-      <div class="auth-form"><div class="inner">${loginForm()}</div></div>
+      <div class="auth-form"><div class="inner">${loginForm({ loading })}</div></div>
     </section>`;
   }
   return `<section class="auth">
     <div class="blob grad-blue" style="width:420px;height:420px;top:-160px;left:-140px"></div>
     <div class="blob grad-light-blue" style="width:380px;height:380px;bottom:-160px;right:-120px"></div>
-    <div class="auth-center"><div class="auth-card">${loginForm()}</div></div>
+    <div class="auth-center"><div class="auth-card">${loginForm({ loading })}</div></div>
   </section>`;
 }
 
@@ -486,6 +498,140 @@ function screenCall(ff, kind) {
   return `${screenChatsConversation(ff)}<div class="overlay"><div class="call-panel">${content}</div></div>`;
 }
 
+/* ---------------------------------------------------------------- Галереи компонентов */
+/* Переиспользуемые компоненты (README §4) — рендер через те же хелперы, что и экраны */
+
+/** Секция галереи: заголовок + содержимое */
+function gSec(title, body) {
+  return `<div class="g-sec"><div class="g-title">${title}</div>${body}</div>`;
+}
+
+/** К1. Базовые: иконки, аватары, логотипы, бейджи, градиенты */
+function screenCompBasics() {
+  const icons = Object.keys(ICONS)
+    .map(n => `<div class="g-icon">${ic(n, 24)}<span class="nm">${n}</span></div>`).join('');
+  const avatars = [
+    av('Anneliese', 88), av('Danielle', 48, { online: true }), av('Maxwell Williamson', 40),
+    av('Theresa', 28), av('Marvin', 48, { grad: ['#FF8A65', '#F4511E'] }),
+  ].join('');
+  const badges = ['2', '5', '9', '99+'].map(b => `<span class="badge">${b}</span>`).join('');
+  return `<section class="gallery scroll-thin">
+    ${gSec('Иконки · ic()', `<div class="g-row">${icons}</div>`)}
+    ${gSec('Аватары · av()', `<div class="g-row">${avatars}</div>`)}
+    ${gSec('Логотипы · logoMark() / logoFull()', `<div class="g-row" style="gap:28px">
+      ${logoMark(40)}${logoFull(34)}
+      <div class="g-dark" style="padding:12px 16px;gap:12px">${logoFull(28, true)}</div>
+    </div>`)}
+    ${gSec('Бейджи счётчиков · .badge', `<div class="g-row">${badges}</div>`)}
+    ${gSec('Градиенты бренда', `<div class="g-row">
+      <div class="g-swatch grad-blue">gradientBlue</div>
+      <div class="g-swatch grad-light-blue">gradientLightBlue</div>
+    </div>`)}
+  </section>`;
+}
+
+/** К2. Кнопки */
+function screenCompButtons() {
+  const iconBtns = ['video', 'phone', 'info', 'x', 'dotsV', 'sun', 'search', 'mic']
+    .map(n => `<button class="icon-btn">${ic(n, 22)}</button>`).join('');
+  return `<section class="gallery scroll-thin">
+    ${gSec('Иконка-кнопка 40×40 · .icon-btn', `<div class="g-row">${iconBtns}</div>`)}
+    ${gSec('Круглая градиентная · .btn-circle', `<div class="g-row">
+      <button class="btn-circle grad-light-blue">${ic('plus', 20)}</button>
+      <button class="btn-circle grad-light-blue send-btn">${ic('send', 20)}</button>
+    </div>`)}
+    ${gSec('Primary · .btn-primary', `<div class="g-col g-limit">
+      <button class="btn-primary" style="margin-top:0">Войти</button>
+    </div>`)}
+    ${gSec('Primary · загрузка · .btn-primary.loading + .spinner', `<div class="g-col g-limit">
+      <button class="btn-primary loading" style="margin-top:0" disabled><span class="spinner"></span></button>
+      <div style="font-size:12px;color:var(--on-variant)">Отправка формы: лейбл заменяется индикатором (TButtons isLoading → CircularProgressIndicator), геометрия и градиент кнопки сохраняются, поля формы disabled.</div>
+    </div>`)}
+    ${gSec('Кнопки звонка · .call-btn', `<div class="g-dark">
+      <button class="call-btn"><span class="c">${ic('micOff', 22)}</span>Mute</button>
+      <button class="call-btn"><span class="c">${ic('speaker', 22)}</span>Speaker</button>
+      <button class="call-btn big accept"><span class="c">${ic('phone', 26)}</span>Accept</button>
+      <button class="call-btn big decline"><span class="c">${ic('phoneDown', 26)}</span>End</button>
+    </div>`)}
+    ${gSec('Управление камерой · .vc-btn / .shutter', `<div class="g-dark" style="gap:32px">
+      <button class="vc-btn">${ic('zap', 22)}</button>
+      <button class="shutter">${ic('camera', 28)}</button>
+      <button class="vc-btn">${ic('flip', 22)}</button>
+    </div>`)}
+  </section>`;
+}
+
+/** К3. Списки и строки */
+function screenCompLists() {
+  const tiles = [
+    tile({ n: 'Anneliese', m: 'Hello, Good Morning...', t: '09:46', b: 2, on: true }, false),
+    tile({ n: 'Danielle', m: 'OMG 😱 OMG...', t: '08:15', read: true }, true),
+    tile({ n: 'Theresa', m: 'Hi, Morning too!', t: '06:12' }, false),
+  ].join('');
+  const stories = `<div class="stories" style="padding:10px 0 6px">
+    <div class="story add"><div class="ring">${ic('plus', 18)}<span class="plus-badge">${ic('plus', 10)}</span></div><span class="nm">You</span></div>
+    ${STORIES.slice(0, 4).map(s => `<div class="story"><div class="ring">${av(s, 48)}</div><span class="nm">${s}</span></div>`).join('')}
+  </div>`;
+  return `<section class="gallery scroll-thin">
+    ${gSec('Тайл диалога 64 · tile()', `<div class="g-col g-limit"><div class="g-box tiles">${tiles}</div></div>`)}
+    ${gSec('Пункт меню · menuItem()', `<div class="g-col g-limit"><div class="menu-list" style="margin-top:0">
+      ${menuItem('bell', 'Notification', '#1565C0', 'rgba(21,101,192,.12)')}
+      ${menuItem('shield', 'Security', '#13C296', 'rgba(19,194,150,.12)')}
+      ${menuItem('logout', 'Logout', '#F44336', 'rgba(244,67,54,.12)', true)}
+    </div></div>`)}
+    ${gSec('Строка участника · .member-row', `<div class="g-col g-limit"><div class="g-box" style="padding:6px 16px">
+      <div class="member-row">${av('Marvin', 44)}<div class="tx"><div class="nm">Marvin</div><div class="un">@marvin_co</div></div><button class="add-btn added">${ic('checks', 16)}</button></div>
+      <div class="member-row">${av('Courtney', 44)}<div class="tx"><div class="nm">Courtney</div><div class="un">@court_henry</div></div><button class="add-btn">${ic('plus', 16)}</button></div>
+    </div></div>`)}
+    ${gSec('Строка «ключ-значение» · .info-row', `<div class="g-col g-limit"><div class="g-box" style="padding:10px 20px">
+      <div class="info-row"><span class="ic-box">${ic('info', 18)}</span><div><div class="k">About</div><div class="v">Only people can see this number 👌</div></div></div>
+      <div class="info-row"><span class="ic-box">${ic('phone', 18)}</span><div><div class="k">Phone</div><div class="v">+62 857-4852-1265</div></div></div>
+    </div></div>`)}
+    ${gSec('Строка-переключатель · .switch-row', `<div class="g-col g-limit"><div class="g-box">
+      <div class="switch-row"><span class="lbl">Notifications</span><button class="tgl"></button></div>
+      <div class="switch-row"><span class="lbl">Protected Chat</span><button class="tgl on"></button></div>
+      <div class="switch-row danger-row"><span class="lbl">Block User</span></div>
+    </div></div>`)}
+    ${gSec('Сторис · .story', stories)}
+  </section>`;
+}
+
+/** К4. Переписка */
+function screenCompChat() {
+  return `<section class="gallery scroll-thin">
+    ${gSec('Шапка переписки · chatBar()', `<div class="g-col" style="max-width:760px"><div class="g-box">
+      ${chatBar('Maxwell Williamson', 'Online', { online: true })}
+    </div></div>`)}
+    ${gSec('Пузыри сообщений · msg()', `<div class="g-col" style="max-width:760px;gap:12px">
+      <div class="date-chip">Today</div>
+      ${msg('in', 'Good Morning!', '10:10')}
+      ${msg('out', 'Good morning! Yes, I went through them yesterday 👌', '10:12')}
+      ${msg('in', 'I have shared the Study Materials', '09:46', { sender: 'Theresa', senderColor: '#13C296', avatar: 'Theresa', doc: 'Study Materials.rar', docSize: '1.2 GB · RAR' })}
+      ${typingRow}
+    </div>`)}
+    ${gSec('Панель ввода · composer()', `<div class="g-col" style="max-width:760px"><div class="g-box">
+      ${composer()}
+    </div></div>`)}
+  </section>`;
+}
+
+/** К5. Поля ввода и вкладки */
+function screenCompFields() {
+  return `<section class="gallery scroll-thin">
+    ${gSec('Поиск · .searchbox', `<div class="g-col g-limit">
+      <div class="searchbox">${ic('search', 18)}<input placeholder="Search" /></div>
+    </div>`)}
+    ${gSec('Текстовое поле · .input', `<div class="g-col g-limit">
+      <div class="input">${ic('mail', 18)}<input type="email" placeholder="you@example.com" /></div>
+      <div class="input">${ic('lock', 18)}<input type="password" placeholder="••••••••" /></div>
+    </div>`)}
+    ${gSec('Вкладки · .tabs', `<div class="g-col g-limit"><div class="tabs" style="padding-top:0">
+      <button class="tab active">Chats</button><button class="tab">Groups</button>
+      <button class="tab">Status</button><button class="tab">Calls</button>
+    </div></div>`)}
+  </section>`;
+}
+
 /* ---------------------------------------------------------------- Реестр */
 const SCREENS = [
   { id: 'chats-empty', group: 'Чаты', title: 'Список чатов · пустой detail',
@@ -508,7 +654,10 @@ const SCREENS = [
     render: screenMore },
   { id: 'auth-login', group: 'Авторизация', title: 'Login',
     note: 'Вход по email и паролю, без соцкнопок · Tablet portrait: карточка 480 · Tablet landscape / Desktop: split — brand ≤40% + форма 440',
-    render: screenAuthLogin },
+    render: ff => screenAuthLogin(ff) },
+  { id: 'auth-login-loading', group: 'Авторизация', title: 'Login · отправка формы',
+    note: 'После нажатия «Войти»: поля disabled, на кнопке спиннер вместо лейбла (.btn-primary.loading) — геометрия кнопки не меняется',
+    render: ff => screenAuthLogin(ff, true) },
   { id: 'auth-onboarding', group: 'Авторизация', title: 'Onboarding',
     note: 'Центрированная композиция max 440 на обоих форм-факторах',
     render: screenOnboarding },
@@ -524,4 +673,19 @@ const SCREENS = [
   { id: 'call-video', group: 'Звонки', title: 'Видеозвонок',
     note: 'Camera-сцена, PiP 96×128, Flash · Shutter (ring #40C4FF) · Flip',
     render: ff => screenCall(ff, 'video') },
+  { id: 'comp-basics', group: 'Компоненты', title: 'Базовые',
+    note: 'Иконки · аватары · логотипы · бейджи · градиенты — ic() / av() / logoMark() / logoFull() / .badge',
+    render: screenCompBasics },
+  { id: 'comp-buttons', group: 'Компоненты', title: 'Кнопки',
+    note: '.icon-btn · .btn-circle · .btn-primary · .call-btn · .vc-btn / .shutter',
+    render: screenCompButtons },
+  { id: 'comp-lists', group: 'Компоненты', title: 'Списки и строки',
+    note: 'tile() · menuItem() · .member-row · .info-row · .switch-row · .story',
+    render: screenCompLists },
+  { id: 'comp-chat', group: 'Компоненты', title: 'Переписка',
+    note: 'chatBar() · msg() · typingRow · composer() · .date-chip',
+    render: screenCompChat },
+  { id: 'comp-fields', group: 'Компоненты', title: 'Поля ввода и вкладки',
+    note: '.searchbox · .input · .tabs',
+    render: screenCompFields },
 ];
