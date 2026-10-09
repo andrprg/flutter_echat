@@ -20,7 +20,7 @@ class TAppTheme {
       fontFamily: 'Roboto',
       brightness: Brightness.light,
       colorScheme: TColors.lightColorScheme,
-      scaffoldBackgroundColor: TColors.colorFFFFFFFF,
+      scaffoldBackgroundColor: TColors.white,
       bottomNavigationBarTheme:
           TBottomNavigatorBarTheme.lightBottomNavigatorBarTheme,
       inputDecorationTheme: TTextFormFieldTheme.lightInputDecorationTheme,
@@ -39,7 +39,7 @@ class TAppTheme {
       fontFamily: 'Roboto',
       brightness: Brightness.dark,
       colorScheme: TColors.darkColorScheme,
-      scaffoldBackgroundColor: TColors.colorFF0D1217,
+      scaffoldBackgroundColor: TColors.neutral900Dark,
       bottomNavigationBarTheme:
           TBottomNavigatorBarTheme.darkBottomNavigatorBarTheme,
       inputDecorationTheme: TTextFormFieldTheme.darkInputDecorationTheme,

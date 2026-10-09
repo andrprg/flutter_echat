@@ -9,30 +9,30 @@ class TSwitchTheme {
   static SwitchThemeData get lightSwitchTheme => SwitchThemeData(
         thumbColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return TColors.colorFFFFFFFF;
+            return TColors.white;
           }
-          return TColors.colorFFD0D1DB;
+          return TColors.neutral100;
         }),
         trackColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return TColors.colorFF40C4FF;
+            return TColors.lightBlue500;
           }
-          return TColors.colorFF9A9BB1;
+          return TColors.neutral300;
         }),
       );
 
   static SwitchThemeData get darkSwitchTheme => SwitchThemeData(
         thumbColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return TColors.colorFFFFFFFF;
+            return TColors.white;
           }
-          return TColors.colorFF8688A1;
+          return TColors.neutral400;
         }),
         trackColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return TColors.colorFF40C4FF;
+            return TColors.lightBlue500;
           }
-          return TColors.colorFF4A4B62;
+          return TColors.neutral700;
         }),
       );
 }

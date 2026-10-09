@@ -11,10 +11,10 @@ class TElevatedButtonTheme {
       ElevatedButtonThemeData(
     style: ElevatedButton.styleFrom(
       elevation: 0,
-      foregroundColor: TColors.colorFFFFFFFF,
-      backgroundColor: TColors.colorFF40C4FF,
-      disabledForegroundColor: TColors.colorFF9A9BB1,
-      disabledBackgroundColor: TColors.colorFFD0D1DB,
+      foregroundColor: TColors.white,
+      backgroundColor: TColors.lightBlue500,
+      disabledForegroundColor: TColors.neutral300,
+      disabledBackgroundColor: TColors.neutral100,
       minimumSize: const Size(double.infinity, TSizes.buttonHeight),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(TSizes.buttonRadius),
@@ -26,10 +26,10 @@ class TElevatedButtonTheme {
       ElevatedButtonThemeData(
     style: ElevatedButton.styleFrom(
       elevation: 0,
-      foregroundColor: TColors.colorFF0D1217,
-      backgroundColor: TColors.colorFF40C4FF,
-      disabledForegroundColor: TColors.colorFF8688A1,
-      disabledBackgroundColor: TColors.colorFF393A4C,
+      foregroundColor: TColors.neutral900Dark,
+      backgroundColor: TColors.lightBlue500,
+      disabledForegroundColor: TColors.neutral400,
+      disabledBackgroundColor: TColors.neutral800,
       minimumSize: const Size(double.infinity, TSizes.buttonHeight),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(TSizes.buttonRadius),

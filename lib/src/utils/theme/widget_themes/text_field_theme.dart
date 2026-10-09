@@ -10,27 +10,27 @@ class TTextFormFieldTheme {
   static InputDecorationTheme get lightInputDecorationTheme {
     return InputDecorationTheme(
       filled: true,
-      fillColor: TColors.colorFFFFFFFF,
-      hintStyle: const TextStyle(color: TColors.colorFF9A9BB1),
+      fillColor: TColors.white,
+      hintStyle: const TextStyle(color: TColors.neutral300),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(TSizes.inputRadius),
-        borderSide: const BorderSide(color: TColors.colorFFD0D1DB),
+        borderSide: const BorderSide(color: TColors.neutral100),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(TSizes.inputRadius),
-        borderSide: const BorderSide(color: TColors.colorFFD0D1DB),
+        borderSide: const BorderSide(color: TColors.neutral100),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(TSizes.inputRadius),
-        borderSide: const BorderSide(color: TColors.colorFF40C4FF, width: 2),
+        borderSide: const BorderSide(color: TColors.lightBlue500, width: 2),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(TSizes.inputRadius),
-        borderSide: const BorderSide(color: TColors.colorFFF44336),
+        borderSide: const BorderSide(color: TColors.error500),
       ),
       focusedErrorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(TSizes.inputRadius),
-        borderSide: const BorderSide(color: TColors.colorFFF44336, width: 2),
+        borderSide: const BorderSide(color: TColors.error500, width: 2),
       ),
     );
   }
@@ -38,27 +38,27 @@ class TTextFormFieldTheme {
   static InputDecorationTheme get darkInputDecorationTheme {
     return InputDecorationTheme(
       filled: true,
-      fillColor: TColors.colorFF393A4C,
-      hintStyle: const TextStyle(color: TColors.colorFF8688A1),
+      fillColor: TColors.neutral800,
+      hintStyle: const TextStyle(color: TColors.neutral400),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(TSizes.inputRadius),
-        borderSide: const BorderSide(color: TColors.colorFF4A4B62),
+        borderSide: const BorderSide(color: TColors.neutral700),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(TSizes.inputRadius),
-        borderSide: const BorderSide(color: TColors.colorFF4A4B62),
+        borderSide: const BorderSide(color: TColors.neutral700),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(TSizes.inputRadius),
-        borderSide: const BorderSide(color: TColors.colorFF40C4FF, width: 2),
+        borderSide: const BorderSide(color: TColors.lightBlue500, width: 2),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(TSizes.inputRadius),
-        borderSide: const BorderSide(color: TColors.colorFFF6695E),
+        borderSide: const BorderSide(color: TColors.error400),
       ),
       focusedErrorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(TSizes.inputRadius),
-        borderSide: const BorderSide(color: TColors.colorFFF6695E, width: 2),
+        borderSide: const BorderSide(color: TColors.error400, width: 2),
       ),
     );
   }
