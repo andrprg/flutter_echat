@@ -1,5 +1,5 @@
 ---
-description: Freezed — entities, DTO, UI state, sealed Failure; где нужен json
+description: Freezed — entities, DTO, sealed Failure; где нужен json; UI state опционально
 globs:
   - "**/features/**/domain/**/*.dart"
   - "**/features/**/data/dto/**/*.dart"
@@ -19,9 +19,11 @@ alwaysApply: false
 | --- | --- | --- |
 | Domain entity | да | нет |
 | DTO (Firestore) | да | да (`fromJson` / `toJson`) |
-| UI state | да | нет |
+| UI state | нет (не обязательно) | нет |
 | Failure | да (`@freezed sealed`) | нет |
 | Union (Auth flow) | да | нет |
+
+UI state (`*_state.dart`, снимки вроде `ErrorBannerState`) — обычный immutable-класс или Freezed на усмотрение. Freezed не требуется.
 
 ## Паттерны
 
@@ -40,24 +42,22 @@ abstract class MessageDto with _$MessageDto {
       _$MessageDtoFromJson(json);
 }
 
-// UI state — freezed, без json; ошибки как Failure?
-@freezed
-abstract class LoginState with _$LoginState {
-  const factory LoginState({
-    @Default('') String email,
-    Failure? error,
-  }) = _LoginState;
+// UI state — Freezed не обязателен; ошибки как Failure?, не String
+class LoginState {
+  const LoginState({this.email = '', this.error});
+  final String email;
+  final Failure? error;
 }
 ```
 
-- Immutable: изменения только через `copyWith`
+- Domain / DTO / Failure: immutable; изменения через `copyWith` (Freezed)
 - Маппинг DTO → Entity **только в data/** (extension на DTO)
 - Текст ошибки в UI — `Failure.displayMessage`, не `String` в state как «ошибка»
 
 ## DON'T
 
-- Мутабельные классы / `setState` для domain/UI state моделей
+- Мутабельные классы / `setState` для domain-моделей (entity, Failure)
 - `json_serializable` на entity или UI state
-- `Map<String, dynamic>` / `dynamic` в domain и presentation вместо Freezed
+- `Map<String, dynamic>` / `dynamic` в domain и presentation вместо типизированных моделей
 - Править `*.freezed.dart` вручную
 ---
