@@ -25,7 +25,7 @@
 7. [Freezed](#7-freezed)
 8. [fpdart](#8-fpdart)
 9. [Поток данных](#9-поток-данных)
-10. [Ошибки и Result](#10-ошибки-и-result)
+10. [Ошибки и Result](#10-ошибки-и-result) ([отображение в UI](#105-отображение-ошибок-в-ui))
 11. [Features (модули)](#11-features-модули)
 12. [Code generation](#12-code-generation)
 13. [Тестирование](#13-тестирование)
@@ -119,7 +119,7 @@ Breakpoint / WindowSize
 2. **Dumb не импортирует `flutter_riverpod`** — тестируется `pumpWidget` без `ProviderScope`.
 3. **Shared dumb** живут в `src/shared/widgets/` или `feature/.../widgets/`; параметры адаптивности передаются во `*_view.dart`; split — `TwoPane` / `ThreePane` в `shared/layouts/`.
 4. **Не плодить Notifier на форм-фактор** — `ChatListController` / `ChatThreadController` по одному на подфичу; phone и desktop получают те же state. Не сливать list+thread в один Notifier «для desktop».
-5. **Колбэки вместо side-effects в dumb** — `onChatTap(chatId)`, `onSend(text)`; навигацию и snackbar делает smart / shell.
+5. **Колбэки вместо side-effects в dumb** — `onChatTap(chatId)`, `onSend(text)`; навигацию и **глобальный баннер ошибки** делает smart / корень приложения (§10.5), не dumb-view.
 
 ### 3.4. Пример
 
@@ -222,7 +222,10 @@ class RegisterController extends _$RegisterController {
         );
     state = state.copyWith(isSubmitting: false);
     result.fold(
-      (failure) => state = state.copyWith(error: failure),
+      (failure) {
+        state = state.copyWith(error: failure); // обводка полей
+        ref.read(errorBannerProvider.notifier).show(failure); // глобальный баннер
+      },
       (_) => ref.read(appRouterProvider).go('/home'),
     );
   }
@@ -251,7 +254,7 @@ class RegisterScreen extends ConsumerWidget {
 }
 ```
 
-**Dumb `RegisterView`** получает только `RegisterState` + колбэки: поля Name / Phone / Password, чекбокс Terms, кнопка Register, сообщение об ошибке из `state.error.displayMessage`. Без `WidgetRef`, без вызова repository (см. [§3.3](#33-правила)).
+**Dumb `RegisterView`** получает только `RegisterState` + колбэки: поля Name / Phone / Password, чекбокс Terms, кнопка Register. Красная обводка полей — из `state.error != null`. Текст ошибки **не** рисует сам: его показывает глобальный `TErrorToast` (§10.5). Без `WidgetRef`, без вызова repository (см. [§3.3](#33-правила)).
 
 **Правила:** на phone — full-height скролл-форма; на wide — центрированная колонка с `maxWidth`. Ошибки — только через sealed `Failure` (§10); переход после успеха — на `/home`.
 
@@ -626,7 +629,7 @@ abstract class ChatListState with _$ChatListState {
 1. **Принимает данные как props**: `ChatListState state` + колбэки `ValueChanged<String> onSearchChanged`, `ValueChanged<String> onChatTap`.
 2. **Рендерит интерфейс списка чатов**: сам список, поле поиска, empty state («No chats»); фильтрация чатов по `query` из `state` выполняется здесь.
 3. **Не знает ни о Riverpod, ни о репозитории, ни о Firebase, ни о соседней колонке thread** — правило §3.3 п.2 и §14 DON'T: dumb не импортирует `flutter_riverpod`, не использует `WidgetRef`, не вызывает `MediaQuery` и не знает про breakpoints.
-4. **Все действия отдаёт через колбэки** — side-effects (навигация, snackbar, вызовы Notifier) делает smart / shell.
+4. **Все действия отдаёт через колбэки** — side-effects (навигация, глобальный баннер ошибки, вызовы Notifier) делает smart / корень приложения (§10.5).
 
 #### `chats_shell_screen.dart` — SMART-композитор (list + thread)
 
@@ -746,11 +749,13 @@ lib/
     │   │   ├── app_router.dart      # CONFIG: GoRouter tree & Auth Guards
     │   │   └── nav_shell.dart       # SMART UI: BottomNavBar (Phone) / NavigationRail (Wide)
     │   └── providers/               # общие Riverpod-провайдеры
-    │       └── app_breakpoint_provider.dart  # appBreakpointProvider + ResponsiveBuilder
+    │       ├── app_breakpoint_provider.dart  # appBreakpointProvider + ResponsiveBuilder
+    │       └── error_banner_provider.dart    # keepAlive Failure? — глобальный баннер ошибки
     │
     ├── shared/
     │   ├── widgets/                 # DUMB: TChatButton, TAvatar, TChatBubble…
-    │   │   └── t_bottom_nav_bar.dart  # DUMB: TBottomNavBar — 4 вкладки (phone)
+    │   │   ├── t_bottom_nav_bar.dart  # DUMB: TBottomNavBar — 4 вкладки (phone)
+    │   │   └── t_error_toast.dart     # DUMB: TErrorToast — карточка баннера (message + onClose)
     │   └── layouts/                 # DUMB: общие layout-обёртки (не feature-specific)
     │       ├── max_width_box.dart   # MaxWidthBox — формы auth/profile/more на desktop
     │       ├── two_pane.dart        # TwoPane — master–detail (chats/groups, tablet+)
@@ -1124,6 +1129,10 @@ ProviderScope(
 );
 ```
 
+### 6.9. Глобальный баннер ошибки в `EChatApp`
+
+Хост баннера — `MaterialApp.builder` (позже `MaterialApp.router`): `Stack` над навигатором, `ref.watch(errorBannerProvider)`. Не в `nav_shell` — экраны auth вне шелла. Любой smart вызывает `ref.read(errorBannerProvider.notifier).show(failure)`. Подробности и виджет `TErrorToast` — [§10.5](#105-отображение-ошибок-в-ui).
+
 ---
 
 ## 7. Freezed
@@ -1344,10 +1353,10 @@ Future<void> login() async {
       );
 
   result.fold(
-    (failure) => state = state.copyWith(
-      isSubmitting: false,
-      error: failure, // sealed Failure → текст берётся из displayMessage
-    ),
+    (failure) {
+      state = state.copyWith(isSubmitting: false, error: failure);
+      ref.read(errorBannerProvider.notifier).show(failure); // §10.5
+    },
     (_) {
       state = state.copyWith(isSubmitting: false);
       ref.read(appRouterProvider).go('/home');
@@ -1369,7 +1378,7 @@ ChatInputView.onSend                          # DUMB callback
             → ChatRemoteDataSource.sendMessage()
                 → Firestore chats/{id}/messages
         ← Either<Failure, Unit>
-    ← обновление optimistic UI / error snackbar (SMART)
+    ← обновление optimistic UI / глобальный баннер ошибки (SMART → errorBannerProvider)
 ```
 
 Пример: **realtime typing** (Realtime Database, не Firestore).
@@ -1438,9 +1447,9 @@ sealed class Failure with _$Failure {
 | --- | --- | --- |
 | **DataSource** | `try/catch` → `throw Failure` | Только DataSource ловит сырые исключения (FirebaseException и др.) через `try/catch` и сразу маппит их в доменный `Failure`. |
 | **Repository** | `Either<Failure, T>` | Возвращают `Either` из `fpdart`. Никогда не выбрасывают исключения наружу. Если шагов несколько — используется `TaskEither.Do`. |
-| **Notifier** | `fold()` → UI state | Riverpod-контроллер распаковывает `Either` через `.fold()` и кладет `Failure` в стейт (например, в `AsyncValue.error` или `error: failure` в классе состояния). |
-| **Smart UI** | `err.displayMessage` | UI не знает о системных исключениях. Берет `Failure` из стейта и вызывает геттер `.displayMessage`. |
-| **Dumb UI** | `message`, `onRetry` | Рисует текст `message` и callback `onRetry`, полученные из Smart-виджета. |
+| **Notifier** | `fold()` → UI state | Riverpod-контроллер распаковывает `Either` через `.fold()` и кладет `Failure` в стейт (например, в `AsyncValue.error` или `error: failure` в классе состояния). Для ошибки **действия** дополнительно вызывает `errorBannerProvider.show(failure)` (§10.5). |
+| **Smart UI** | `err.displayMessage` | UI не знает о системных исключениях. Берёт `Failure` и вызывает `.displayMessage`. Загрузка экрана → `ErrorView`; ошибка действия → глобальный баннер. |
+| **Dumb UI** | `message`, `onRetry` / `onClose` | `ErrorView` или `TErrorToast`: только текст и колбэки, без `Failure` и без `ref`. |
 
 **Пример обработки в DataSource:**
 ```dart
@@ -1470,12 +1479,41 @@ return chatState.when(
 - **Строки для ошибок:** Ошибки нельзя передавать как `String` или `Option<String>`. Строки извлекаются из интерфейса пользователя только в самом конце через `Failure.displayMessage`.
 - **Исключения выше DataSource:** Прямое использование Firebase SDK (`FirebaseException`) и сторонних классов-исключений в виджетах и слое Presentation запрещено.
 - **Проглатывание ошибок:** Конструкция `catch (_) {}` без логирования или оборачивания в `Failure` недопустима.
+- **Локальный тост фичи:** ошибка действия — только глобальный баннер (`errorBannerProvider` + `TErrorToast`), не `SnackBar` экрана и не пакеты toast (§10.5).
 
 ### 10.4. Optimistic UI для сообщений
 
 1. Notifier добавляет `Message` со `status: sending` в локальный state.
 2. Repository возвращает `Either`.
 3. При `Right` — `status: sent`; при `Left` — `status: failed` + retry action.
+
+### 10.5. Отображение ошибок в UI
+
+Три канала — не смешивать. Текст везде из `Failure.displayMessage`, не из `String` в state как «ошибка».
+
+| Когда | Куда | Пример |
+| --- | --- | --- |
+| Экран не загрузился (`AsyncValue.error`) | `ErrorView` на месте контента, `onRetry` | список чатов |
+| Действие не удалось, экран остаётся | **глобальный баннер** поверх всего приложения | неверный логин, нет сети при отправке |
+| Ошибка поля (формат до submit) | `errorBorder` у `TextFormField` / `TTextField` | некорректный email |
+
+**Глобальный баннер** — один на приложение:
+
+1. Стейт: `@Riverpod(keepAlive: true)` `errorBannerProvider` в `utils/providers/error_banner_provider.dart` (`Failure?`, методы `show` / `dismiss`).
+2. Хост: `MaterialApp.builder` в `EChatApp` — `Stack` над навигатором (`ref.watch(errorBannerProvider)`). Не в `nav_shell`: Login / Register вне шелла вкладок.
+3. Виджет: dumb `TErrorToast` (`shared/widgets/t_error_toast.dart`) — props `message` + `onClose`; без Riverpod. Карточка сверху, max 480, красная полоска слева (макеты `docs/design_kimi`, экран Login · ошибка).
+4. Вызов из **любого** smart после `fold`:
+
+```dart
+result.fold(
+  (failure) => ref.read(errorBannerProvider.notifier).show(failure),
+  (_) => ref.read(appRouterProvider).go('/home'),
+);
+```
+
+Локальный snackbar экрана, `fluttertoast` / `oktoast`, тост внутри `*_view.dart` и `ScaffoldMessenger.showSnackBar` из фичи — не использовать: вложенные `Scaffold` у `go_router` его перехватывают, баннер пропадает при уходе со страницы и рисуется снизу (клавиатура на логине).
+
+Поля формы при ошибке входа: красная обводка (`errorBorder` темы), **без** дублирования той же строки под полем — текст только в баннере.
 
 ---
 
@@ -1606,6 +1644,8 @@ testWidgets('ChatListView shows empty state', (tester) async {
 - Breakpoints только через `appBreakpointProvider` / `utils/constants/breakpoints.dart` + `utils/providers/`.
 - Выбор layout в smart: `ResponsiveBuilder` или `switch` по `AppBreakpoint` (§4.1.1).
 - Master–detail (chats/groups): smart-shell компонует dumb из разных подпапок; общие маршруты `/…` и `/…/:id` (§4.3).
+- Ошибка действия — глобальный баннер: `errorBannerProvider.show(failure)` + `TErrorToast` в `MaterialApp.builder` (§10.5).
+- Ошибка загрузки экрана — `ErrorView` с `Failure.displayMessage` и `onRetry`.
 
 ### DON'T
 
@@ -1618,6 +1658,8 @@ testWidgets('ChatListView shows empty state', (tester) async {
 - `dynamic` / `Map<String, dynamic>` в domain и presentation.
 - Проглатывание ошибок (`catch (_) {}` без `Failure`).
 - `String` / `Option<String>` для ошибок — все ошибки только через sealed `Failure`.
+- SnackBar / тост из feature-экрана или dumb-view; пакеты `fluttertoast` / `oktoast`.
+- Баннер ошибки в `nav_shell` (auth вне шелла) или копии «для phone/tablet/desktop».
 - Вложенный `flatMap` вместо Do-нотации fpdart.
 - Циклические imports между features — выносить контракты в `domain` или `shared`.
 - Хардкод `MediaQuery` порогов в feature-виджетах в обход `AppBreakpoint`.
@@ -1634,6 +1676,7 @@ testWidgets('ChatListView shows empty state', (tester) async {
 - [ ] Кастомные виджеты с префиксом `T` и файлом `t_*.dart`
 - [ ] Новые экраны проверены на phone и хотя бы одном wide breakpoint (tablet или desktop)
 - [ ] Master–detail (если есть): shell + два dumb, не копия фичи под wide
+- [ ] Ошибка действия — через `errorBannerProvider`, не локальный SnackBar; загрузка экрана — `ErrorView`
 
 ---
 

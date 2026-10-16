@@ -246,7 +246,7 @@
 
 - [ ] Подпапка `presentation/chat_list/`: `ChatListView` (dumb) + `ChatListController` + `ChatListState` (Freezed)
 - [ ] `ChatListScreen` (smart) — phone full-screen `/chats` и/или маппинг list→props внутри shell
-- [ ] `chatListStreamProvider` (`@riverpod Stream<Either<Failure, List<Chat>>>`) + `ChatListController` (AsyncNotifier, подписка через `ref.watch` / `ref.onDispose`) — **один** Notifier на все форм-факторы (не отдельный «для desktop»)
+- [ ] `chatListStreamProvider` (`@riverpod Stream<Either<Failure, List<Chat>>>`) + `ChatListController` (AsyncNotifier, данные через `ref.watch` / `ref.listen` на stream-провайдер — без ручного `StreamSubscription` в `build`) — **один** Notifier на все форм-факторы (не отдельный «для desktop»)
 - [ ] UI: last message, time, unread — как в Figma **Chats**
 - [ ] Pull-to-refresh (phone/tablet); на desktop — refresh action / focus shortcut
 - [ ] **Chats _ Click Search** — фильтрация по имени locally
