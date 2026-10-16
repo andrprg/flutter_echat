@@ -10,13 +10,13 @@ class TProgressIndicatorTheme {
   static const double buttonStrokeWidth = 2.5;
 
   /// Светлая тема: индикатор на surface / нейтральном фоне.
-  static final ProgressIndicatorThemeData light = ProgressIndicatorThemeData(
+  static final ProgressIndicatorThemeData light = const ProgressIndicatorThemeData(
     color: TColors.lightBlue500,
     circularTrackColor: TColors.neutral100,
   );
 
   /// Тёмная тема: индикатор на surface / нейтральном фоне.
-  static final ProgressIndicatorThemeData dark = ProgressIndicatorThemeData(
+  static final ProgressIndicatorThemeData dark = const ProgressIndicatorThemeData(
     color: TColors.lightBlue400,
     circularTrackColor: TColors.neutral800,
   );
