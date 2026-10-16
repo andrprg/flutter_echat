@@ -3,6 +3,7 @@ import 'package:flutter_echat/src/shared/widgets/t_icon_widget.dart';
 import 'package:flutter_echat/src/utils/constants/colors.dart';
 import 'package:flutter_echat/src/utils/constants/sizes.dart';
 import 'package:flutter_echat/src/utils/helpers/helper_functions.dart';
+import 'package:flutter_echat/src/utils/theme/widget_themes/progress_indicator_theme.dart';
 import 'package:flutter_echat/src/utils/theme/widget_themes/text_theme.dart';
 
 /// Визуальный вариант кнопки [TButton].
@@ -141,16 +142,21 @@ class _ButtonContent extends StatelessWidget {
 }
 
 /// Круговой индикатор загрузки для [TButton.isLoading].
+///
+/// Цвета — [TProgressIndicatorTheme.onPrimary]; толщина — [TProgressIndicatorTheme.buttonStrokeWidth].
 class _CircularProgress extends StatelessWidget {
   const _CircularProgress();
 
   @override
   Widget build(BuildContext context) {
-    return CircularProgressIndicator(
-      strokeWidth: 2.5,
-      color: TColors.white,
-      backgroundColor: TColors.white.withValues(alpha: 0.35),
-      strokeCap: StrokeCap.round,
+    return Theme(
+      data: Theme.of(context).copyWith(
+        progressIndicatorTheme: TProgressIndicatorTheme.onPrimary,
+      ),
+      child: const CircularProgressIndicator(
+        strokeWidth: TProgressIndicatorTheme.buttonStrokeWidth,
+        strokeCap: StrokeCap.round,
+      ),
     );
   }
 }

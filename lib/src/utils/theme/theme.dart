@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_echat/src/utils/theme/widget_themes/appbar_theme.dart';
 import 'package:flutter_echat/src/utils/theme/widget_themes/bottom_navigator_bar_theme.dart';
 import 'package:flutter_echat/src/utils/theme/widget_themes/elevated_button_theme.dart';
+import 'package:flutter_echat/src/utils/theme/widget_themes/progress_indicator_theme.dart';
 import 'package:flutter_echat/src/utils/theme/widget_themes/snack_bar_theme.dart';
 import 'package:flutter_echat/src/utils/theme/widget_themes/switch_theme.dart';
 import 'package:flutter_echat/src/utils/theme/widget_themes/tabbar_theme.dart';
@@ -25,6 +26,7 @@ class TAppTheme {
           TBottomNavigatorBarTheme.lightBottomNavigatorBarTheme,
       inputDecorationTheme: TTextFormFieldTheme.lightInputDecorationTheme,
       elevatedButtonTheme: TElevatedButtonTheme.lightElevatedButtonTheme,
+      progressIndicatorTheme: TProgressIndicatorTheme.light,
       textTheme: TTextTheme.lightTextTheme,
       appBarTheme: TAppBarTheme.lightAppBarTheme,
       switchTheme: TSwitchTheme.lightSwitchTheme,
@@ -44,6 +46,7 @@ class TAppTheme {
           TBottomNavigatorBarTheme.darkBottomNavigatorBarTheme,
       inputDecorationTheme: TTextFormFieldTheme.darkInputDecorationTheme,
       elevatedButtonTheme: TElevatedButtonTheme.darkElevatedButtonTheme,
+      progressIndicatorTheme: TProgressIndicatorTheme.dark,
       textTheme: TTextTheme.darkTextTheme,
       appBarTheme: TAppBarTheme.darkAppBarTheme,
       switchTheme: TSwitchTheme.darkSwitchTheme,
