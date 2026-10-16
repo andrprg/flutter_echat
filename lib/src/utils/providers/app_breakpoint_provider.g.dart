@@ -10,32 +10,22 @@ part of 'app_breakpoint_provider.dart';
 // ignore_for_file: type=lint, type=warning
 /// Публикует текущий [AppBreakpoint] по ширине окна.
 ///
-/// Ширина: [FlutterView] (logical px) + при наличии дерева —
-/// [MediaQuery.sizeOf] через [AppBreakpointListener].
-/// При ресайзе окна пересчитывается (`didChangeMetrics`).
-///
 /// Smart-экраны читают этот провайдер; dumb-виджеты пороги не знают.
 
-@ProviderFor(AppBreakpointNotifier)
-final appBreakpointProvider = AppBreakpointNotifierProvider._();
+@ProviderFor(appBreakpoint)
+final appBreakpointProvider = AppBreakpointProvider._();
 
 /// Публикует текущий [AppBreakpoint] по ширине окна.
 ///
-/// Ширина: [FlutterView] (logical px) + при наличии дерева —
-/// [MediaQuery.sizeOf] через [AppBreakpointListener].
-/// При ресайзе окна пересчитывается (`didChangeMetrics`).
-///
 /// Smart-экраны читают этот провайдер; dumb-виджеты пороги не знают.
-final class AppBreakpointNotifierProvider
-    extends $NotifierProvider<AppBreakpointNotifier, AppBreakpoint> {
+
+final class AppBreakpointProvider
+    extends $FunctionalProvider<AppBreakpoint, AppBreakpoint, AppBreakpoint>
+    with $Provider<AppBreakpoint> {
   /// Публикует текущий [AppBreakpoint] по ширине окна.
   ///
-  /// Ширина: [FlutterView] (logical px) + при наличии дерева —
-  /// [MediaQuery.sizeOf] через [AppBreakpointListener].
-  /// При ресайзе окна пересчитывается (`didChangeMetrics`).
-  ///
   /// Smart-экраны читают этот провайдер; dumb-виджеты пороги не знают.
-  AppBreakpointNotifierProvider._()
+  AppBreakpointProvider._()
     : super(
         from: null,
         argument: null,
@@ -47,11 +37,17 @@ final class AppBreakpointNotifierProvider
       );
 
   @override
-  String debugGetCreateSourceHash() => _$appBreakpointNotifierHash();
+  String debugGetCreateSourceHash() => _$appBreakpointHash();
 
   @$internal
   @override
-  AppBreakpointNotifier create() => AppBreakpointNotifier();
+  $ProviderElement<AppBreakpoint> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  AppBreakpoint create(Ref ref) {
+    return appBreakpoint(ref);
+  }
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(AppBreakpoint value) {
@@ -62,31 +58,4 @@ final class AppBreakpointNotifierProvider
   }
 }
 
-String _$appBreakpointNotifierHash() =>
-    r'2474d7d550e8a420e9299543a7b7e478da4b15b7';
-
-/// Публикует текущий [AppBreakpoint] по ширине окна.
-///
-/// Ширина: [FlutterView] (logical px) + при наличии дерева —
-/// [MediaQuery.sizeOf] через [AppBreakpointListener].
-/// При ресайзе окна пересчитывается (`didChangeMetrics`).
-///
-/// Smart-экраны читают этот провайдер; dumb-виджеты пороги не знают.
-
-abstract class _$AppBreakpointNotifier extends $Notifier<AppBreakpoint> {
-  AppBreakpoint build();
-  @$mustCallSuper
-  @override
-  WhenComplete runBuild() {
-    final ref = this.ref as $Ref<AppBreakpoint, AppBreakpoint>;
-    final element =
-        ref.element
-            as $ClassProviderElement<
-              AnyNotifier<AppBreakpoint, AppBreakpoint>,
-              AppBreakpoint,
-              Object?,
-              Object?
-            >;
-    return element.handleCreate(ref, build);
-  }
-}
+String _$appBreakpointHash() => r'f200bd91557303eab30821cd8d6d656149eb84d1';
