@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>E-Chat · Tablet & Desktop — макеты</title>
+<title>E-Chat · Phone / Tablet / Desktop — макеты</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="tokens.css" />
@@ -59,8 +59,8 @@
 <body>
 <div class="viewer">
   <aside class="vside">
-    <h1>E-Chat · Tablet & Desktop</h1>
-    <div class="sub">Макеты по мотивам мобильного Figma-кита<br/><kbd>↑</kbd><kbd>↓</kbd> экраны · <kbd>T</kbd> тема · <kbd>F</kbd> форм-фактор</div>
+    <h1>E-Chat · макеты</h1>
+    <div class="sub">Phone · Tablet · Desktop по мотивам Figma-кита<br/><kbd>↑</kbd><kbd>↓</kbd> экраны · <kbd>T</kbd> тема · <kbd>F</kbd> форм-фактор</div>
     <div id="screenList"></div>
   </aside>
   <main class="vmain">
@@ -71,6 +71,7 @@
       </div>
       <div class="vpush"></div>
       <div class="vseg" id="ffSeg">
+        <button data-ff="phone">Phone · 393×852</button>
         <button data-ff="tablet">Tablet · 768×1024</button>
         <button data-ff="tabletL">Tablet L · 1024×768</button>
         <button data-ff="desktop">Desktop · 1440×900</button>
@@ -95,11 +96,12 @@
 <script>
 (function () {
   const state = { screen: 'chats-conversation', ff: 'desktop', theme: 'light' };
+  const FF = ['phone', 'tablet', 'tabletL', 'desktop'];
 
   // Восстановление состояния из location.hash (#screen/ff/theme)
   const h = new URLSearchParams(location.hash.slice(1));
   if (h.get('screen') && SCREENS.some(s => s.id === h.get('screen'))) state.screen = h.get('screen');
-  if (['tablet', 'tabletL', 'desktop'].includes(h.get('ff'))) state.ff = h.get('ff');
+  if (FF.includes(h.get('ff'))) state.ff = h.get('ff');
   if (h.get('theme') === 'light' || h.get('theme') === 'dark') state.theme = h.get('theme');
 
   const $ = id => document.getElementById(id);
@@ -126,8 +128,7 @@
   document.addEventListener('keydown', e => {
     if (e.key === 't' || e.key === 'T' || e.key === 'е' || e.key === 'Е') { state.theme = state.theme === 'light' ? 'dark' : 'light'; render(); }
     if (e.key === 'f' || e.key === 'F' || e.key === 'а' || e.key === 'А') {
-      const order = ['tablet', 'tabletL', 'desktop'];
-      state.ff = order[(order.indexOf(state.ff) + 1) % order.length];
+      state.ff = FF[(FF.indexOf(state.ff) + 1) % FF.length];
       render();
     }
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
@@ -155,16 +156,24 @@
 
   function render() {
     const scr = SCREENS.find(s => s.id === state.screen);
+    // Phone-макеты пока только у экранов Авторизации (флаг phone: true)
+    if (state.ff === 'phone' && !scr.phone) state.ff = 'tablet';
+    const ff = state.ff;
     const frame = $('frame');
-    frame.className = 'frame ' + state.ff;
+    frame.className = 'frame ' + ff;
     frame.dataset.theme = state.theme;
-    $('app').innerHTML = scr.render(state.ff);
+    $('app').innerHTML = scr.render(ff);
     $('capTitle').textContent = scr.title;
     $('capNote').textContent = scr.note;
-    const sizes = { tablet: '768 × 1024', tabletL: '1024 × 768', desktop: '1440 × 900' };
-    $('capSize').textContent = sizes[state.ff] + ' · ' + (state.theme === 'light' ? 'Light' : 'Dark');
+    const sizes = { phone: '393 × 852', tablet: '768 × 1024', tabletL: '1024 × 768', desktop: '1440 × 900' };
+    $('capSize').textContent = sizes[ff] + ' · ' + (state.theme === 'light' ? 'Light' : 'Dark');
     document.querySelectorAll('.vitem').forEach(b => b.classList.toggle('active', b.dataset.id === state.screen));
-    $('ffSeg').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.ff === state.ff));
+    $('ffSeg').querySelectorAll('button').forEach(b => {
+      const unavailable = b.dataset.ff === 'phone' && !scr.phone;
+      b.classList.toggle('on', b.dataset.ff === ff);
+      b.disabled = unavailable;
+      b.style.opacity = unavailable ? '.35' : '';
+    });
     $('themeSeg').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.theme === state.theme));
     location.hash = `screen=${state.screen}&ff=${state.ff}&theme=${state.theme}`;
     requestAnimationFrame(fitScale);

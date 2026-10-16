@@ -1,6 +1,6 @@
 /* ==========================================================================
-   E-Chat · Tablet & Desktop mockups — рендер экранов
-   Каждый экран — функция render(ff), ff = 'tablet' | 'desktop'.
+   E-Chat · Phone / Tablet / Desktop mockups — рендер экранов
+   Каждый экран — функция render(ff), ff = 'phone' | 'tablet' | 'tabletL' | 'desktop'.
    Тема применяется через data-theme на .frame (см. tokens.css).
    Тексты UI — на английском (язык оригинального Figma-кита);
    форма авторизации — на русском (целевая локаль приложения).
@@ -19,6 +19,7 @@ const ICONS = {
   phoneDown: '<g transform="rotate(135 12 12)"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></g>',
   video: '<path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/>',
   info: '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>',
+  alertCircle: '<circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>',
   mic: '<path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v4M8 23h8"/>',
   micOff: '<path d="M2 2l20 20"/><path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"/><path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23"/><path d="M12 19v4M8 23h8"/>',
   send: '<path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/>',
@@ -45,6 +46,9 @@ const ICONS = {
   lock: '<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
   mail: '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 6l-10 7L2 6"/>',
   speaker: '<path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>',
+  arrowR: '<path d="M5 12h14M13 5l7 7-7 7"/>',
+  arrowL: '<path d="M19 12H5M11 19l-7-7 7-7"/>',
+  eye: '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',
 };
 
 /** svg-обёртка для глифа */
@@ -365,51 +369,177 @@ function screenMore(ff) {
   </section>`;
 }
 
-/** Форма логина — общая для карточки и split; вход по email и паролю.
-    opts.loading — отправка формы: поля disabled, на кнопке индикатор загрузки
-    (соответствует TButtons isLoading — CircularProgressIndicator вместо лейбла) */
-function loginForm(opts = {}) {
+/** Всплывающее сообщение об ошибке — текст из Failure.displayMessage.
+    kind: 'error' (по умолчанию). */
+function toast(message, kind = 'error') {
+  return `<div class="toast toast-${kind}" role="alert">
+    <span class="toast-ic">${ic('alertCircle', 18)}</span>
+    <span class="toast-msg">${message}</span>
+    <button class="toast-x" aria-label="Закрыть">${ic('x', 16)}</button>
+  </div>`;
+}
+
+/** Абсолютный хост тоста: сверху контейнера (хедер phone / колонка формы wide). */
+function toastHost(message, kind = 'error') {
+  return `<div class="toast-host">${toast(message, kind)}</div>`;
+}
+
+/** Поля формы логина (email + пароль) — общие для phone / card / split.
+    opts.loading — отправка формы: поля disabled, заполнены демо-значениями
+    opts.error — ошибка входа: поля заполнены, обводка .input.error */
+function loginFields(opts = {}) {
+  const loading = opts.loading === true;
+  const error = opts.error === true;
+  const filled = loading || error;
+  const disCls = loading ? ' disabled' : '';
+  const errCls = error ? ' error' : '';
+  const disAttr = loading ? ' disabled' : '';
+  const emailVal = filled ? ' value="you@example.com"' : '';
+  const passVal = filled ? ' value="password123"' : '';
+  return `<label class="field-label">Email</label>
+  <div class="input${disCls}${errCls}">${ic('mail', 18)}<input type="email" placeholder="you@example.com"${emailVal}${disAttr} /></div>
+  <label class="field-label" style="margin-top:16px">Пароль</label>
+  <div class="input${disCls}${errCls}">${ic('lock', 18)}<input type="password" placeholder="••••••••"${passVal}${disAttr} />${ic('eye', 18)}</div>`;
+}
+
+/** Поля формы регистрации: имя, email, пароль, чекбокс Terms */
+function registerFields(opts = {}) {
   const loading = opts.loading === true;
   const disCls = loading ? ' disabled' : '';
   const disAttr = loading ? ' disabled' : '';
-  // В состоянии отправки поля показаны заполненными (пользователь уже ввёл данные)
+  const nameVal = loading ? ' value="Алексей"' : '';
   const emailVal = loading ? ' value="you@example.com"' : '';
   const passVal = loading ? ' value="password123"' : '';
+  const termsChecked = loading ? ' checked' : '';
+  return `<label class="field-label">Имя</label>
+  <div class="input${disCls}">${ic('user', 18)}<input type="text" placeholder="Ваше имя"${nameVal}${disAttr} /></div>
+  <label class="field-label" style="margin-top:16px">Email</label>
+  <div class="input${disCls}">${ic('mail', 18)}<input type="email" placeholder="you@example.com"${emailVal}${disAttr} /></div>
+  <label class="field-label" style="margin-top:16px">Пароль</label>
+  <div class="input${disCls}">${ic('lock', 18)}<input type="password" placeholder="••••••••"${passVal}${disAttr} />${ic('eye', 18)}</div>
+  <label class="auth-terms"><input type="checkbox"${termsChecked}${disAttr} /><span>Согласен с <a href="#">условиями использования</a></span></label>`;
+}
+
+/** Форма логина — карточка / split (wide); вход по email и паролю.
+    opts.loading — на кнопке индикатор (TButtons isLoading)
+    opts.error — красная обводка полей после неудачного входа */
+function loginForm(opts = {}) {
+  const loading = opts.loading === true;
   const btn = loading
     ? '<button class="btn-primary loading" disabled><span class="spinner"></span></button>'
     : '<button class="btn-primary">Войти</button>';
   return `${logoFull(40)}
   <h2>Добро пожаловать</h2>
   <div class="sub">Войдите в свой аккаунт</div>
-  <label class="field-label">Email</label>
-  <div class="input${disCls}">${ic('mail', 18)}<input type="email" placeholder="you@example.com"${emailVal}${disAttr} /></div>
-  <label class="field-label" style="margin-top:16px">Пароль</label>
-  <div class="input${disCls}">${ic('lock', 18)}<input type="password" placeholder="••••••••"${passVal}${disAttr} /></div>
+  ${loginFields(opts)}
   <div class="auth-forgot"><a href="#">Забыли пароль?</a></div>
   ${btn}
   <div class="auth-foot">Нет аккаунта? <a href="#">Создать</a></div>`;
 }
 
-/** 7. Auth — Login: tablet portrait — карточка 480; desktop и tablet landscape (1024) — split brand + форма.
-    loading=true — состояние отправки формы (на кнопке спиннер, поля заблокированы) */
-function screenAuthLogin(ff, loading = false) {
+/** Форма регистрации — карточка / split (wide) */
+function registerForm(opts = {}) {
+  const loading = opts.loading === true;
+  const btn = loading
+    ? '<button class="btn-primary loading" disabled><span class="spinner"></span></button>'
+    : '<button class="btn-primary">Зарегистрироваться</button>';
+  return `${logoFull(40)}
+  <h2>Создать аккаунт</h2>
+  <div class="sub">Зарегистрируйтесь по email и паролю</div>
+  ${registerFields(opts)}
+  ${btn}
+  <div class="auth-foot">Уже есть аккаунт? <a href="#">Войти</a></div>`;
+}
+
+/** Primary-кнопка отправки (phone) — pill-градиент, как на wide */
+function authPrimaryBtn(label, loading) {
+  return loading
+    ? '<button class="btn-primary loading" disabled><span class="spinner"></span></button>'
+    : `<button class="btn-primary">${label}</button>`;
+}
+
+/** Phone · Login — волнистый хедер Figma-кита, поля email + пароль */
+function screenAuthLoginPhone(loading = false, error = false) {
+  const rememberChecked = loading ? ' checked' : '';
+  const banner = error ? toastHost('Неверный логин или пароль') : '';
+  return `<section class="auth-phone">
+    ${banner}
+    <header class="auth-phone-head">
+      <div class="row">
+        <div class="titles">
+          <h1>Вход</h1>
+          <div class="lead">Введите email и&nbsp;пароль</div>
+        </div>
+        <button class="auth-pill">Регистрация</button>
+      </div>
+    </header>
+    <div class="auth-phone-body">
+      <div class="hint">Вход в аккаунт E-Chat</div>
+      ${loginFields({ loading, error })}
+      <div class="auth-forgot"><a href="#">Забыли пароль?</a></div>
+      <label class="auth-check" style="margin-top:18px"><input type="checkbox"${rememberChecked}${loading ? ' disabled' : ''} /><span>Запомнить меня</span></label>
+      ${authPrimaryBtn('Войти', loading)}
+      <div class="auth-phone-foot">Нет аккаунта? <a href="#">Создать</a></div>
+    </div>
+  </section>`;
+}
+
+/** Phone · Register — зеркало Login, поля имя / email / пароль / Terms */
+function screenAuthRegisterPhone(loading = false) {
+  return `<section class="auth-phone">
+    <header class="auth-phone-head">
+      <div class="row">
+        <button class="auth-pill">${ic('arrowL', 16)} Вход</button>
+        <div class="titles right">
+          <h1>Регистрация</h1>
+          <div class="lead">Создайте&nbsp;аккаунт</div>
+        </div>
+      </div>
+    </header>
+    <div class="auth-phone-body">
+      <div class="hint">Регистрация по email и паролю</div>
+      ${registerFields({ loading })}
+      ${authPrimaryBtn('Зарегистрироваться', loading)}
+      <div class="auth-phone-foot">Уже есть аккаунт? <a href="#">Войти</a></div>
+    </div>
+  </section>`;
+}
+
+/** Оболочка auth для wide: tablet portrait — карточка 480; tabletL / desktop — split.
+    toastHtml — опциональный .toast-host поверх колонки формы */
+function authWideShell(formHtml, ff, toastHtml = '') {
   if (ff !== 'tablet') {
     return `<section class="auth">
       <div class="auth-brand grad-blue">
         <div class="deco" style="width:220px;height:220px;top:-70px;right:-60px;transform:rotate(24deg)"></div>
         <div class="deco" style="width:140px;height:140px;top:120px;right:60px;transform:rotate(-14deg);background:rgba(255,255,255,.07)"></div>
         <div>${logoFull(44, true)}</div>
-        <h1>Connect with friends, anywhere.</h1>
-        <p>Fast, simple and secure messaging — now on the big screen.</p>
+        <h1>Общайтесь с друзьями — где угодно.</h1>
+        <p>Быстрый, простой и безопасный мессенджер — теперь на большом экране.</p>
       </div>
-      <div class="auth-form"><div class="inner">${loginForm({ loading })}</div></div>
+      <div class="auth-form">${toastHtml}<div class="inner">${formHtml}</div></div>
     </section>`;
   }
   return `<section class="auth">
     <div class="blob grad-blue" style="width:420px;height:420px;top:-160px;left:-140px"></div>
     <div class="blob grad-light-blue" style="width:380px;height:380px;bottom:-160px;right:-120px"></div>
-    <div class="auth-center"><div class="auth-card">${loginForm({ loading })}</div></div>
+    <div class="auth-center">${toastHtml}<div class="auth-card">${formHtml}</div></div>
   </section>`;
+}
+
+/** 7. Auth — Login: phone — full-bleed кит; tablet — карточка 480; desktop / tabletL — split.
+    loading=true — состояние отправки формы (спиннер, поля заблокированы)
+    error=true — неудачный вход: toast + красная обводка полей */
+function screenAuthLogin(ff, loading = false, error = false) {
+  const banner = error ? toastHost('Неверный логин или пароль') : '';
+  if (ff === 'phone') return screenAuthLoginPhone(loading, error);
+  return authWideShell(loginForm({ loading, error }), ff, banner);
+}
+
+/** 7b. Auth — Register: phone — кит; wide — та же композиция, что у Login */
+function screenAuthRegister(ff, loading = false) {
+  if (ff === 'phone') return screenAuthRegisterPhone(loading);
+  return authWideShell(registerForm({ loading }), ff);
 }
 
 /** 8. Onboarding — центрированная композиция 440 */
@@ -527,6 +657,13 @@ function screenCompBasics() {
       <div class="g-swatch grad-blue">gradientBlue</div>
       <div class="g-swatch grad-light-blue">gradientLightBlue</div>
     </div>`)}
+    ${gSec('Snackbar ошибки · toast()', `<div class="g-col g-limit">
+      <div class="g-box" style="position:relative;min-height:96px;background:var(--surface-2)">
+        ${toastHost('Неверный логин или пароль')}
+      </div>
+      ${toast('Нет подключения к сети')}
+      <div style="font-size:12px;color:var(--on-variant)">Текст — Failure.displayMessage. Phone: сверху поверх хедера · Tablet / Desktop: сверху формы, max 480. Flutter: SnackBar + TSnackBarTheme.</div>
+    </div>`)}
   </section>`;
 }
 
@@ -625,6 +762,11 @@ function screenCompFields() {
       <div class="input">${ic('mail', 18)}<input type="email" placeholder="you@example.com" /></div>
       <div class="input">${ic('lock', 18)}<input type="password" placeholder="••••••••" /></div>
     </div>`)}
+    ${gSec('Текстовое поле · ошибка · .input.error', `<div class="g-col g-limit">
+      <div class="input error">${ic('mail', 18)}<input type="email" value="you@example.com" /></div>
+      <div class="input error">${ic('lock', 18)}<input type="password" value="password123" />${ic('eye', 18)}</div>
+      <div style="font-size:12px;color:var(--on-variant)">Обводка --error после неудачной отправки (Login · ошибка).</div>
+    </div>`)}
     ${gSec('Вкладки · .tabs', `<div class="g-col g-limit"><div class="tabs" style="padding-top:0">
       <button class="tab active">Chats</button><button class="tab">Groups</button>
       <button class="tab">Status</button><button class="tab">Calls</button>
@@ -652,12 +794,21 @@ const SCREENS = [
   { id: 'more', group: 'Профиль', title: 'Ещё (More)',
     note: 'Профильная карточка-строка + полное меню настроек в MaxWidthBox 560',
     render: screenMore },
-  { id: 'auth-login', group: 'Авторизация', title: 'Login',
-    note: 'Вход по email и паролю, без соцкнопок · Tablet portrait: карточка 480 · Tablet landscape / Desktop: split — brand ≤40% + форма 440',
+  { id: 'auth-login', group: 'Авторизация', title: 'Login', phone: true,
+    note: 'Email + пароль, без соцкнопок · Phone 393: волнистый хедер кита · Tablet portrait: карточка 480 · Tablet L / Desktop: split',
     render: ff => screenAuthLogin(ff) },
-  { id: 'auth-login-loading', group: 'Авторизация', title: 'Login · отправка формы',
-    note: 'После нажатия «Войти»: поля disabled, на кнопке спиннер вместо лейбла (.btn-primary.loading) — геометрия кнопки не меняется',
+  { id: 'auth-login-loading', group: 'Авторизация', title: 'Login · отправка формы', phone: true,
+    note: 'После нажатия «Войти»: поля disabled, на кнопке спиннер (.btn-primary.loading)',
     render: ff => screenAuthLogin(ff, true) },
+  { id: 'auth-login-error', group: 'Авторизация', title: 'Login · ошибка', phone: true,
+    note: 'Неудачный вход: toast «Неверный логин или пароль» сверху + красная обводка полей (.input.error)',
+    render: ff => screenAuthLogin(ff, false, true) },
+  { id: 'auth-register', group: 'Авторизация', title: 'Register', phone: true,
+    note: 'Имя + email + пароль + Terms · Phone: зеркало Login (пил «Вход») · wide: карточка / split как у Login',
+    render: ff => screenAuthRegister(ff) },
+  { id: 'auth-register-loading', group: 'Авторизация', title: 'Register · отправка формы', phone: true,
+    note: 'После нажатия «Зарегистрироваться»: поля и Terms disabled, на кнопке спиннер (.btn-primary.loading)',
+    render: ff => screenAuthRegister(ff, true) },
   { id: 'auth-onboarding', group: 'Авторизация', title: 'Onboarding',
     note: 'Центрированная композиция max 440 на обоих форм-факторах',
     render: screenOnboarding },
@@ -674,7 +825,7 @@ const SCREENS = [
     note: 'Camera-сцена, PiP 96×128, Flash · Shutter (ring #40C4FF) · Flip',
     render: ff => screenCall(ff, 'video') },
   { id: 'comp-basics', group: 'Компоненты', title: 'Базовые',
-    note: 'Иконки · аватары · логотипы · бейджи · градиенты — ic() / av() / logoMark() / logoFull() / .badge',
+    note: 'Иконки · аватары · логотипы · бейджи · градиенты · toast ошибки — ic() / av() / logoMark() / logoFull() / .badge / toast()',
     render: screenCompBasics },
   { id: 'comp-buttons', group: 'Компоненты', title: 'Кнопки',
     note: '.icon-btn · .btn-circle · .btn-primary · .call-btn · .vc-btn / .shutter',

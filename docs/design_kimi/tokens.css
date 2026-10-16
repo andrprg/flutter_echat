@@ -1,6 +1,6 @@
 /* ==========================================================================
    E-Chat · Tablet & Desktop mockups — токены и компоненты
-   Источник токенов: docs/echat_colors.dart (Figma Design Tokens)
+   Источник токенов: echat.fig (Color System) + docs/echat_colors.dart
    Макетный текст — на английском (язык оригинального кита), auth — на русском; комментарии — RU.
    ========================================================================== */
 
@@ -28,11 +28,12 @@ body {
    -------------------------------------------------------------------------- */
 
 .frame { position: relative; overflow: hidden; border-radius: 10px; flex: none; }
+.frame.phone   { width: 393px;  height: 852px; }
 .frame.tablet  { width: 768px;  height: 1024px; }
 .frame.tabletL { width: 1024px; height: 768px; }
 .frame.desktop { width: 1440px; height: 900px; }
 
-/* Light — ColorScheme.light из echat_colors.dart */
+/* Light — токены кита (Figma Color System) */
 .frame[data-theme="light"] {
   --surface: #FFFFFF;
   --surface-2: #F7F8FA;
@@ -51,7 +52,7 @@ body {
   --outline: #D0D1DB;
   --divider: #E7E7E7;
   --badge: #1565C0;
-  --online: #13C296;
+  --online: #00C853;
   --error: #F44336;
   --error-container: #FEECEB;
   --success: #00C853;
@@ -61,15 +62,15 @@ body {
   --shadow-pop: 0 24px 64px rgba(9, 42, 81, 0.18);
 }
 
-/* Dark — ColorScheme.dark из echat_colors.dart */
+/* Dark — сверка с echat.fig: scaffold Black #292929; #0D1217 только у звонков */
 .frame[data-theme="dark"] {
-  --surface: #0D1217;
-  --surface-2: #151D26;
-  --card: #151D26;
+  --surface: #292929;
+  --surface-2: #393A4C;
+  --card: #292929;
   --on-surface: #FFFFFF;
   --on-variant: #9A9BB1;
   --primary: #40C4FF;
-  --on-primary: #0D1217;
+  --on-primary: #292929;
   --primary-container: #092A51;
   --secondary: #66D0FF;
   --secondary-container: #1B526B;
@@ -78,11 +79,11 @@ body {
   --input-bg: #393A4C;
   --input-border: #4A4B62;
   --outline: #4A4B62;
-  --divider: #232B35;
+  --divider: #393A4C;
   --badge: #40C4FF;
-  --online: #13C296;
+  --online: #00C853;
   --error: #F6695E;
-  --error-container: #3D1F1D;
+  --error-container: #661C17;
   --success: #00C853;
   --checks: #40C4FF;
   --dim: rgba(0, 0, 0, 0.6);
@@ -234,7 +235,7 @@ body {
   background: var(--badge); color: #fff; flex: none;
   font-size: 11.5px; font-weight: 700; display: grid; place-items: center;
 }
-.frame[data-theme="dark"] .badge { color: #0D1217; }
+.frame[data-theme="dark"] .badge { color: #292929; }
 
 /* Аватары */
 .av { position: relative; flex: none; border-radius: 50%; display: grid; place-items: center; color: #fff; font-weight: 600; }
@@ -370,7 +371,7 @@ body {
   font-size: 10.5px; background: var(--badge); color: #fff; border-radius: 8px;
   padding: 1px 5px; margin-left: 4px; vertical-align: 1px;
 }
-.frame[data-theme="dark"] .media-tabs .cnt { color: #0D1217; }
+.frame[data-theme="dark"] .media-tabs .cnt { color: #292929; }
 .media-grid {
   display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 12px 20px;
 }
@@ -461,7 +462,7 @@ body {
 .auth-brand h1 { font-size: 32px; font-weight: 700; line-height: 1.25; margin-top: auto; }
 .auth-brand p { font-size: 15px; opacity: .85; margin-top: 12px; max-width: 340px; }
 .auth-brand .deco { position: absolute; border-radius: 32px; background: rgba(255,255,255,.10); }
-.auth-form { flex: 1; display: grid; place-items: center; padding: 40px; }
+.auth-form { flex: 1; display: grid; place-items: center; padding: 40px; position: relative; }
 .auth-form .inner { width: 440px; max-width: 100%; }
 
 .auth h2 { font-size: 24px; font-weight: 700; margin: 20px 0 6px; }
@@ -473,6 +474,8 @@ body {
   border-radius: 12px; padding: 13px 14px; color: var(--on-variant);
 }
 .input:focus-within { border-color: var(--secondary); border-width: 2px; padding: 12.5px 13.5px; }
+.input.error { border-color: var(--error); color: var(--error); }
+.input.error:focus-within { border-color: var(--error); }
 .input input { flex: 1; border: 0; outline: 0; background: none; font: inherit; color: var(--on-surface); }
 .input input::placeholder { color: var(--on-variant); }
 
@@ -520,6 +523,155 @@ body {
 .btn-outline + .btn-outline { margin-top: 12px; }
 .auth-foot { text-align: center; margin-top: 24px; font-size: 14px; color: var(--on-variant); }
 .auth-foot a { color: var(--primary); font-weight: 600; text-decoration: none; }
+
+/* --------------------------------------------------------------------------
+   Auth · Phone — full width, волнистый хедер (как Login/Sign Up в Figma-ките),
+   вход и регистрация по email + паролю (без SMS / соцкнопок)
+   -------------------------------------------------------------------------- */
+
+.auth-phone {
+  flex: 1; display: flex; flex-direction: column;
+  background: var(--surface); position: relative; overflow: hidden;
+}
+.auth-phone-head {
+  position: relative; flex: none; color: #fff;
+  padding: 52px 28px 72px; min-height: 220px;
+  background: linear-gradient(160deg, #40C4FF 0%, #1565C0 55%, #0F4888 100%);
+}
+.auth-phone-head::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 56px;
+  background: var(--surface);
+  border-top-left-radius: 50% 56px; border-top-right-radius: 50% 56px;
+}
+.auth-phone-head .row {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+  position: relative; z-index: 1;
+}
+.auth-phone-head .titles { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.auth-phone-head .titles.right {
+  text-align: right; align-items: flex-end; margin-left: auto;
+  flex: 0 0 auto; max-width: none;
+}
+.auth-phone-head h1 { font-size: 28px; font-weight: 700; line-height: 1.2; white-space: nowrap; }
+.auth-phone-head .lead {
+  font-size: 18px; font-weight: 600; line-height: 1.3; opacity: .95;
+  white-space: nowrap;
+}
+.auth-pill {
+  flex: none; display: inline-flex; align-items: center; gap: 6px;
+  border: 0; cursor: pointer; font: inherit; font-size: 14px; font-weight: 600;
+  color: #1565C0; background: rgba(255, 255, 255, .92);
+  padding: 10px 16px; border-radius: 24px;
+  box-shadow: 0 4px 12px rgba(9, 42, 81, .12);
+}
+.frame[data-theme="dark"] .auth-pill { color: #0F4888; }
+.auth-phone-body {
+  flex: 1; display: flex; flex-direction: column;
+  padding: 8px 28px 28px; position: relative; z-index: 1;
+}
+.auth-phone-body .hint {
+  text-align: center; font-size: 13.5px; font-weight: 500;
+  color: var(--primary); margin-bottom: 22px;
+}
+.auth-phone-body .field-label { margin-top: 14px; }
+.auth-phone-body .field-label:first-of-type { margin-top: 0; }
+.auth-check {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 14px; font-weight: 500; color: var(--on-surface); cursor: pointer;
+  user-select: none;
+}
+.auth-check input {
+  appearance: none; width: 20px; height: 20px; border-radius: 5px; flex: none;
+  border: 1.5px solid var(--outline); background: var(--input-bg); cursor: pointer;
+  display: grid; place-items: center;
+}
+.auth-check input:checked {
+  background: var(--primary); border-color: var(--primary);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12l5 5L20 7'/%3E%3C/svg%3E");
+  background-size: 14px; background-repeat: no-repeat; background-position: center;
+}
+.frame[data-theme="dark"] .auth-check input:checked {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23292929' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12l5 5L20 7'/%3E%3C/svg%3E");
+}
+.auth-phone-foot {
+  text-align: center; margin-top: auto; padding-top: 20px;
+  font-size: 13.5px; color: var(--on-variant);
+}
+.auth-phone-foot a { color: var(--primary); font-weight: 600; text-decoration: none; }
+.auth-terms {
+  display: flex; align-items: flex-start; gap: 10px;
+  font-size: 13px; line-height: 1.4; color: var(--on-variant); margin-top: 18px;
+  cursor: pointer; user-select: none;
+}
+.auth-terms a { color: var(--primary); font-weight: 600; text-decoration: none; }
+.auth-terms input {
+  appearance: none; width: 20px; height: 20px; border-radius: 5px; flex: none;
+  margin-top: 1px; border: 1.5px solid var(--outline); background: var(--input-bg); cursor: pointer;
+}
+.auth-terms input:checked {
+  background: var(--primary); border-color: var(--primary);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12l5 5L20 7'/%3E%3C/svg%3E");
+  background-size: 14px; background-repeat: no-repeat; background-position: center;
+}
+.frame[data-theme="dark"] .auth-terms input:checked {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23292929' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12l5 5L20 7'/%3E%3C/svg%3E");
+}
+
+/* --------------------------------------------------------------------------
+   Toast / snackbar ошибки — всплывающее сообщение (Failure.displayMessage)
+   Phone: сверху поверх хедера · Tablet / Desktop: сверху колонки формы, max 480
+   -------------------------------------------------------------------------- */
+
+.toast-host {
+  position: absolute; top: 0; left: 0; right: 0; z-index: 20;
+  display: flex; justify-content: center;
+  padding: 16px 16px 0;
+  pointer-events: none;
+}
+.frame.phone .toast-host { padding: 12px 16px 0; }
+.frame.tablet .toast-host,
+.frame.tabletL .toast-host,
+.frame.desktop .toast-host { padding: 20px 24px 0; }
+
+.toast {
+  pointer-events: auto;
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; max-width: 480px;
+  padding: 12px 10px 12px 12px;
+  border-radius: 14px;
+  font-size: 14px; font-weight: 600; line-height: 1.35;
+  animation: toast-in .32s ease-out;
+  background: var(--card);
+  color: var(--on-surface);
+  box-shadow: var(--shadow-pop);
+}
+.toast-error {
+  border-left: 4px solid var(--error);
+  box-shadow: 0 12px 32px rgba(9, 42, 81, .22), 0 0 0 1px rgba(244, 67, 54, .18);
+}
+.frame[data-theme="dark"] .toast-error {
+  background: var(--surface-2);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, .5), 0 0 0 1px rgba(246, 105, 94, .28);
+}
+.toast-ic {
+  width: 28px; height: 28px; border-radius: 50%; flex: none;
+  display: grid; place-items: center;
+  background: var(--error-container);
+  color: var(--error);
+}
+.toast-ic .ic { width: 16px; height: 16px; }
+.toast-msg { flex: 1; min-width: 0; }
+.toast-x {
+  width: 28px; height: 28px; flex: none;
+  border: 0; background: none; color: var(--on-variant); cursor: pointer;
+  border-radius: 8px; display: grid; place-items: center;
+}
+.toast-x:hover { color: var(--on-surface); background: var(--surface-2); }
+.frame[data-theme="dark"] .toast-x:hover { background: rgba(255, 255, 255, .08); }
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: none; }
+}
 
 /* Онбординг */
 .onb { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 48px; text-align: center; }
@@ -635,7 +787,7 @@ body {
 .g-icon { width: 76px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
 .g-icon .nm { font-size: 11px; color: var(--on-variant); }
 .g-dark {
-  background: #0D1217; border-radius: 16px; padding: 20px;
+  background: #292929; border-radius: 16px; padding: 20px;
   display: flex; align-items: center; justify-content: center; gap: 28px; flex-wrap: wrap;
 }
 .g-swatch {

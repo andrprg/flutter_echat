@@ -1,8 +1,17 @@
-# E-Chat — макеты Tablet & Desktop
+# E-Chat — макеты Phone / Tablet / Desktop
 
-Адаптация мобильного UI-кита [Chatting App UI Kit | E-Chat (Figma)](https://www.figma.com/design/Do69JP5vfRzBNw3OO2jRHH/Chatting-App-UI-Kit-Design-_-E-Chat-_-Figma--Community-) на планшет и десктоп.
+Адаптация мобильного UI-кита [Chatting App UI Kit | E-Chat (Figma)](https://www.figma.com/design/Do69JP5vfRzBNw3OO2jRHH/Chatting-App-UI-Kit-Design-_-E-Chat-_-Figma--Community-) на планшет и десктоп; для **Авторизации** — также phone-макеты (email + пароль).
 
-**Просмотр:** открыть [index.html](./index.html) в браузере. Переключатели в тулбаре — форм-фактор (Tablet 768×1024 / **Tablet L 1024×768** / Desktop 1440×900) и тема (Light / Dark). Горячие клавиши: `↑`/`↓` — экраны, `T` — тема, `F` — форм-фактор. Состояние хранится в hash ссылки — можно делиться конкретным экраном.
+**Просмотр:** открыть [index.html](./index.html) в браузере. Переключатели в тулбаре — форм-фактор (**Phone 393×852** / Tablet 768×1024 / **Tablet L 1024×768** / Desktop 1440×900) и тема (Light / Dark). Phone доступен у экранов группы «Авторизация». Горячие клавиши: `↑`/`↓` — экраны, `T` — тема, `F` — форм-фактор. Состояние хранится в hash ссылки — можно делиться конкретным экраном.
+
+Прямые ссылки на phone-макеты auth:
+
+- [Login · Phone · Light](./index.html#screen=auth-login&ff=phone&theme=light)
+- [Login · ошибка · Phone · Light](./index.html#screen=auth-login-error&ff=phone&theme=light)
+- [Register · Phone · Light](./index.html#screen=auth-register&ff=phone&theme=light)
+- [Login · Phone · Dark](./index.html#screen=auth-login&ff=phone&theme=dark)
+- [Login · ошибка · Phone · Dark](./index.html#screen=auth-login-error&ff=phone&theme=dark)
+- [Register · Phone · Dark](./index.html#screen=auth-register&ff=phone&theme=dark)
 
 **Источники мобильного кита:** PNG-экспорт фреймов — [docs/E-Chat _ Figma/](../E-Chat%20_%20Figma).  
 **Связанные документы:** спецификация раскладок — [docs/layouts-tablet-desktop.md](../layouts-tablet-desktop.md), токены — [docs/echat_colors.dart](../echat_colors.dart), архитектура адаптива — [docs/architecture_echat.md §4](../architecture_echat.md).
@@ -35,44 +44,51 @@
 | Chats | одна колонка | **TwoPane**: master 300 + detail flex | **TwoPane**: master 300 + detail 484 | **TwoPane**: master 320 + detail flex; **ThreePane**: + info 320 |
 | Info pane | push-экран | overlay 480 | overlay 480 (три колонки не влезают: 240+320+320=880) | третья колонка 320 |
 | Profile / More | full width | контент в `MaxWidthBox` 560 по центру | то же | то же |
-| Auth | full width | карточка **480** по центру | **split**: brand ≤40% + форма 440 | **split** |
+| Auth | **full width**, волнистый хедер кита (email + пароль) | карточка **480** по центру | **split**: brand ≤40% + форма 440 | **split** |
 | Sheets | bottom sheet | centered dialog **480**, radius 16, shadow2 | то же | то же |
+| Toast ошибки | сверху, inset 16, поверх хедера | сверху формы, max **480** | то же | сверху колонки формы, max **480** |
 | Звонки | full screen | full-frame overlay | панель **420×min(780, H−80)** | панель **420×780** поверх dim shell |
 
 ¹ Ширина 1024 уже за брейкпоинтом desktop (`≥1024`) — отсюда sidebar вместо rail. При необходимости sidebar схлопывается в rail 72 (`TSizes.railWidth`).
 
 Плотность (density) wide-версий: тайл диалога **64 dp** (на phone ~72), горизонтальный padding списка 16, переписки — 24.
 
-## 2. Токены (без изменений палитры кита)
+## 2. Токены (палитра кита `echat.fig`)
 
-Новых цветов не введено — только `ColorScheme` из `docs/echat_colors.dart`:
+Сверка с локальным Figma-экспортом: основные экраны Dark Mode — Black `#292929`; `#0D1217` — только фон звонков. Online / Accept — Success `#00C853` (не `#13C296`).
 
 | Роль | Light | Dark |
 | --- | --- | --- |
-| Surface | `#FFFFFF` | `#0D1217` |
+| Surface | `#FFFFFF` | `#292929` (звонки: `#0D1217`) |
+| Surface-2 / hover | `#F7F8FA` | `#393A4C` |
 | On surface / variant | `#2C2D3A` / `#8688A1` | `#FFFFFF` / `#9A9BB1` |
 | Primary | `#1565C0` | `#40C4FF` |
 | Исходящий bubble | градиент `#40C4FF→#03A9F4` | тот же |
 | Входящий bubble | `#F0F0F3` | `#393A4C` |
+| Divider | `#E7E7E7` | `#393A4C` |
 | Unread badge | `#1565C0` | `#40C4FF` |
-| Online | `#13C296` | `#13C296` |
+| Online | `#00C853` | `#00C853` |
 | Accept / End (звонки) | `#00C853` / `#F44336` | те же |
+| Error / toast | `#F44336` / контейнер `#FEECEB` | `#F6695E` / контейнер `#661C17` |
 
 Типографика — Roboto: Headline L 32/Bold, Headline M 24/SemiBold, Title L 18/SemiBold, Body L 16, Body M 14, Label L 16/SemiBold. Базовые кегли на wide не увеличиваются.
 
-## 3. Карта экранов (13 экранов × 3 форм-фактора × 2 темы = 78 состояний)
+## 3. Карта экранов
 
-| # | Экран | Мобильный источник (Figma PNG) | Композиция на wide |
+| # | Экран | Мобильный источник (Figma PNG) | Композиция |
 | --- | --- | --- | --- |
-| 1 | Чаты · пустой detail | `Chats.png` | master + placeholder «Select a chat» |
-| 2 | Чаты · переписка | `Chats _ Conversation.png`, `… _ Typing.png` | TwoPane, список не уезжает |
+| 1 | Чаты · пустой detail | `Chats.png` | wide: master + placeholder «Select a chat» |
+| 2 | Чаты · переписка | `Chats _ Conversation.png`, `… _ Typing.png` | wide: TwoPane, список не уезжает |
 | 3 | Чаты · инфо-панель | `Chats _ User Information.png`, `… _ Media.png` | Desktop: 3-я колонка 320 · Tablet: overlay 480 |
-| 4 | Группы · переписка | `Groups _ Conversation.png` | TwoPane; отправители цветом, карточка документа |
-| 5 | Профиль | `Profile.png` | одна колонка, MaxWidthBox 560 |
-| 6 | Ещё (More) | `More.png` | MaxWidthBox 560, полное меню |
-| 7 | Login (email + пароль) | `Login _ Empty.png` | Tablet: карточка 480 · Desktop: split; вход по email и паролю, без соцкнопок |
-| 7a | Login · отправка формы | — | то же; поля disabled, на кнопке спиннер вместо лейбла (`TButtons` `isLoading`) |
-| 8 | Onboarding | `Introduce _ Step 1.png` | центрированная композиция 440 |
+| 4 | Группы · переписка | `Groups _ Conversation.png` | wide: TwoPane; отправители цветом, карточка документа |
+| 5 | Профиль | `Profile.png` | wide: одна колонка, MaxWidthBox 560 |
+| 6 | Ещё (More) | `More.png` | wide: MaxWidthBox 560, полное меню |
+| 7 | Login (email + пароль) | `Login _ Empty.png` (в ките — телефон/SMS; у нас email + пароль) | **Phone:** волнистый хедер + поля + pill «Войти» · Tablet: карточка 480 · Desktop: split; без соцкнопок |
+| 7a | Login · отправка формы | — | то же; поля disabled, спиннер на `.btn-primary` (`TButtons` `isLoading`) |
+| 7b | Login · ошибка | — | то же; поля с `.input.error`, сверху toast «Неверный логин или пароль» (`Failure.displayMessage`) |
+| 7c | Register (имя + email + пароль + Terms) | `Sign Up _ Empty.png` / User Information (адаптация под email) | **Phone:** зеркало Login + pill «Зарегистрироваться» · wide: карточка / split как у Login |
+| 7d | Register · отправка формы | — | то же; поля и Terms disabled, спиннер на кнопке |
+| 8 | Onboarding | `Introduce _ Step 1.png` | wide: центрированная композиция 440 |
 | 9 | Add Friend | `Add Function _ Add Friend.png` | bottom sheet → centered dialog 480 |
 | 10 | Входящий звонок | `Chats _ Call.png` | Tablet: full overlay · Desktop: панель 420×780 |
 | 11 | Активный звонок | `Chats _ Calling.png` | то же; таймер, Mute/Speaker/End |
@@ -100,6 +116,7 @@
 | Аватар: градиент, инициалы, online-dot | `av()` / `.av`, `.dot` | 10 экранов: chrome, tile, chat-bar, bubble (группы), info-pane, profile, more, add-friend, звонки, PiP | `TAvatar` (`t_avatar.dart`) |
 | Логотип: знак / знак + wordmark, версии под тему | `logoMark()`, `logoFull()` / `.logo-img` | rail, sidebar, auth (brand + форма), empty-detail | `TLogo` (`t_logo.dart`) |
 | Бейдж счётчика (unread) | `.badge` (+ `.cnt` в media-tabs) | sidebar, тайл диалога, media-tabs | `TCountBadge` (`t_count_badge.dart`) |
+| Snackbar ошибки (floating, сверху) | `toast()` / `.toast`, `.toast-host` | Login · ошибка (phone + wide), галерея «Базовые» | `SnackBar` + `TSnackBarTheme` (`snack_bar_theme.dart`) |
 
 ### Кнопки
 
@@ -107,8 +124,8 @@
 | --- | --- | --- | --- |
 | Иконка-кнопка 40×40 | `.icon-btn` | chat-bar, info-head, single-head, dialog-head, video-top (12 вхождений) | `TIconButton` (`t_icon_button.dart`) |
 | Круглая градиентная (plus / send) | `.btn-circle.grad-light-blue` | master-head, composer ×2 | `TGradientButton` (`t_gradient_button.dart`) |
-| Primary (градиент, pill) | `.btn-primary` | login, onboarding | `TPrimaryButton` (`t_primary_button.dart`) |
-| Primary · загрузка (спиннер вместо лейбла, геометрия сохраняется) | `.btn-primary.loading` + `.spinner` | login · отправка формы | `TButtons` (`t_buttons.dart`) — проп `isLoading` |
+| Primary (градиент, pill) | `.btn-primary` | login / register (phone + wide), onboarding | `TPrimaryButton` (`t_primary_button.dart`) |
+| Primary · загрузка (спиннер вместо лейбла, геометрия сохраняется) | `.btn-primary.loading` + `.spinner` | login / register · отправка | `TButtons` (`t_buttons.dart`) — проп `isLoading` |
 | Кнопка звонка (Mute/Speaker/Accept/End) | `.call-btn` | входящий и активный звонок | `TCallButton` (`t_call_button.dart`) |
 
 ### Навигация и вкладки
@@ -140,7 +157,8 @@
 | Компонент | Макет | Где используется | Flutter |
 | --- | --- | --- | --- |
 | Поиск (filled, pill) | `.searchbox` | master чатов и групп | `TSearchField` (`t_search_field.dart`) |
-| Текстовое поле с иконкой (outlined) | `.input` | login (email, пароль), add-friend (поиск) | `TTextField` (`t_text_field.dart`) |
+| Текстовое поле с иконкой (outlined) | `.input` | login / register (имя, email, пароль), add-friend (поиск) | `TTextField` (`t_text_field.dart`) |
+| Поле с ошибкой | `.input.error` | Login · ошибка | `TTextField` — состояние ошибки |
 
 ### Контейнеры и каркасы
 
@@ -179,6 +197,7 @@
 | Ширины колонок | `TSizes.railWidth` (72), `sidebarWidth` (240), `masterPaneWidth` (300/320), `infoPaneWidth` (320) |
 | Одноколоночные экраны | `MaxWidthBox` 560 / `TSizes.maxContentWidth` |
 | Диалоги | phone bottom sheet → `showDialog` max 480 на wide |
+| Toast ошибки | `SnackBar` + `TSnackBarTheme` (`scaffoldMessenger`); текст — `Failure.displayMessage` |
 | Звонки | full-frame overlay (tablet) / centered dialog 420×780 (desktop) |
 
 Отдельных копий фич «под tablet/desktop» не заводить: smart-экран выбирает композицию по `appBreakpointProvider`, dumb-компоненты общие.
@@ -188,7 +207,7 @@
 | Файл | Назначение |
 | --- | --- |
 | `index.html` | Просмотрщик: список экранов, переключатели форм-фактора/темы, масштабирование |
-| `tokens.css` | Токены Light/Dark (зеркало `echat_colors.dart`) + стили компонентов |
-| `screens.js` | Рендер-функции 12 экранов + 5 галерей компонентов (§4) + реестр |
+| `tokens.css` | Токены Light/Dark (зеркало `echat_colors.dart`) + стили компонентов (+ `.auth-phone`, `.toast`) |
+| `screens.js` | Рендер-функции экранов (в т.ч. Login/Register phone + Login · ошибка) + 5 галерей компонентов (§4) + реестр |
 
 Логотипы в макетах — файлы из [assets/logos/](../../assets/logos): `logo_echat_light/dark.png` (знак + wordmark, 465×158) в сайдбаре и на экране авторизации, `logo_light/dark.png` (знак, 174×158) в rail и empty-state. Версия под тему переключается классами `logo-l` / `logo-d` (см. `tokens.css`).
