@@ -38,7 +38,7 @@ enum TButtonVariant {
 /// - [icon] — имя SVG из `assets/icons` (как у [TIconWidget]); опционально
 /// - [radius] — радиус скругления; по умолчанию [TSizes.buttonRadius]
 /// - [width] — ширина; по умолчанию на всю доступную
-class TButton extends StatelessWidget {
+class TButtonWidget extends StatelessWidget {
   /// Текст на кнопке.
   final String label;
 
@@ -60,7 +60,7 @@ class TButton extends StatelessWidget {
   /// Ширина контейнера; по умолчанию [double.infinity].
   final double width;
 
-  const TButton({
+  const TButtonWidget({
     super.key,
     required this.label,
     this.variant = TButtonVariant.primary,

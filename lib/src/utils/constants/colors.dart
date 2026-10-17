@@ -52,6 +52,8 @@ class TColors {
   // ─── Semantic ─────────────────────────────────────────────────────────────
 
   static const Color error50 = Color(0xFFFEECEB);
+  /// Dark mode — фон иконки в toast ошибки (макет: `--error-container`).
+  static const Color error50Dark = Color(0xFF661C17);
   static const Color error400 = Color(0xFFF6695E);
   static const Color error500 = Color(0xFFF44336);
 
@@ -84,6 +86,16 @@ class TColors {
     end: Alignment.bottomRight,
     colors: [Color(0xFF40C4FF), Color(0xFF03A9F4)],
   );
+
+  /// Градиентные плейсхолдеры аватаров — как в ките E-Chat.
+  static const List<List<Color>> avatarGradients = [
+    [Color(0xFF1565C0), Color(0xFF0F4888)],
+    [Color(0xFF40C4FF), Color(0xFF0288D1)],
+    [Color(0xFFFF8A65), Color(0xFFF4511E)],
+    [Color(0xFFBA68C8), Color(0xFF8E24AA)],
+    [Color(0xFF13C296), Color(0xFF0A8F6C)],
+    [Color(0xFFF06292), Color(0xFFC2185B)],
+  ];
 
   // ─── Shadows ──────────────────────────────────────────────────────────────
 
@@ -134,7 +146,7 @@ class TColors {
         outlineVariant: neutral800,
         error: error400,
         onError: neutral900Dark,
-        errorContainer: Color(0xFF3D1F1D),
+        errorContainer: error50Dark,
         onErrorContainer: error400,
       );
 }

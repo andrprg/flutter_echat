@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_echat/src/shared/widgets/t_button.dart';
+import 'package:flutter_echat/src/shared/widgets/t_button_widget.dart';
 import 'package:widgetbook/widgetbook.dart';
 import 'package:widgetbook_annotation/widgetbook_annotation.dart' as widgetbook;
 
-@widgetbook.UseCase(name: 'Interactive', type: TButton)
+@widgetbook.UseCase(name: 'Interactive', type: TButtonWidget)
 Widget buildTButtonInteractive(BuildContext context) {
   final enabled = context.knobs.boolean(label: 'enabled', initialValue: true);
   final showIcon = context.knobs.boolean(label: 'showIcon', initialValue: true);
@@ -11,12 +11,12 @@ Widget buildTButtonInteractive(BuildContext context) {
   return Center(
     child: Padding(
       padding: const EdgeInsets.all(16),
-      child: TButton(
+      child: TButtonWidget(
         label: context.knobs.string(label: 'label', initialValue: 'Войти'),
         variant: context.knobs.object.dropdown(
           label: 'variant',
           options: TButtonVariant.values,
-          labelBuilder: (value) => value.name,
+          labelBuilder: (value) => value?.name ?? '',
         ),
         isLoading: context.knobs.boolean(label: 'isLoading'),
         icon: showIcon
@@ -31,12 +31,12 @@ Widget buildTButtonInteractive(BuildContext context) {
   );
 }
 
-@widgetbook.UseCase(name: 'Primary', type: TButton)
+@widgetbook.UseCase(name: 'Primary', type: TButtonWidget)
 Widget buildTButtonPrimary(BuildContext context) {
   return const Center(
     child: Padding(
       padding: EdgeInsets.all(16),
-      child: TButton(
+      child: TButtonWidget(
         label: 'Войти',
         icon: 'outline_arrows_action_login_3',
         onTap: _noop,
@@ -45,12 +45,12 @@ Widget buildTButtonPrimary(BuildContext context) {
   );
 }
 
-@widgetbook.UseCase(name: 'Danger', type: TButton)
+@widgetbook.UseCase(name: 'Danger', type: TButtonWidget)
 Widget buildTButtonDanger(BuildContext context) {
   return const Center(
     child: Padding(
       padding: EdgeInsets.all(16),
-      child: TButton(
+      child: TButtonWidget(
         label: 'Удалить',
         variant: TButtonVariant.danger,
         onTap: _noop,
@@ -59,12 +59,12 @@ Widget buildTButtonDanger(BuildContext context) {
   );
 }
 
-@widgetbook.UseCase(name: 'Loading', type: TButton)
+@widgetbook.UseCase(name: 'Loading', type: TButtonWidget)
 Widget buildTButtonLoading(BuildContext context) {
   return const Center(
     child: Padding(
       padding: EdgeInsets.all(16),
-      child: TButton(
+      child: TButtonWidget(
         label: 'Войти',
         isLoading: true,
         onTap: _noop,
@@ -73,12 +73,12 @@ Widget buildTButtonLoading(BuildContext context) {
   );
 }
 
-@widgetbook.UseCase(name: 'Disabled', type: TButton)
+@widgetbook.UseCase(name: 'Disabled', type: TButtonWidget)
 Widget buildTButtonDisabled(BuildContext context) {
   return const Center(
     child: Padding(
       padding: EdgeInsets.all(16),
-      child: TButton(label: 'Войти'),
+      child: TButtonWidget(label: 'Войти'),
     ),
   );
 }

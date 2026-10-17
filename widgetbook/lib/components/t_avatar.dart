@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_echat/src/shared/widgets/t_avatar.dart';
+import 'package:flutter_echat/src/shared/widgets/t_avatar_widget.dart';
 import 'package:widgetbook/widgetbook.dart';
 import 'package:widgetbook_annotation/widgetbook_annotation.dart' as widgetbook;
 
-@widgetbook.UseCase(name: 'Interactive', type: TAvatar)
+@widgetbook.UseCase(name: 'Interactive', type: TAvatarWidget)
 Widget buildTAvatarInteractive(BuildContext context) {
   return Center(
-    child: TAvatar(
+    child: TAvatarWidget(
       name: context.knobs.string(label: 'name', initialValue: 'Анна Иванова'),
       size: context.knobs.double.slider(
         label: 'size',
@@ -23,16 +23,16 @@ Widget buildTAvatarInteractive(BuildContext context) {
   );
 }
 
-@widgetbook.UseCase(name: 'Default', type: TAvatar)
+@widgetbook.UseCase(name: 'Default', type: TAvatarWidget)
 Widget buildTAvatarDefault(BuildContext context) {
   return const Center(
-    child: TAvatar(name: 'Анна Иванова'),
+    child: TAvatarWidget(name: 'Анна Иванова'),
   );
 }
 
-@widgetbook.UseCase(name: 'Online', type: TAvatar)
+@widgetbook.UseCase(name: 'Online', type: TAvatarWidget)
 Widget buildTAvatarOnline(BuildContext context) {
   return const Center(
-    child: TAvatar(name: 'Иван Петров', showOnlineDot: true),
+    child: TAvatarWidget(name: 'Иван Петров', showOnlineDot: true),
   );
 }
