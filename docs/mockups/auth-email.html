@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="light" data-device="phone" data-screen="login-empty">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>E-Chat — Auth Email (Figma style)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root,
+    [data-theme="light"] {
+      --wave: #40c4ff;
+      --wave-deep: #29b6f6;
+      --white: #ffffff;
+      --text: #2c2d3a;
+      --muted: #8688a1;
+      --line: #d0d1db;
+      --error: #f44336;
+      --bg: #ffffff;
+      --kb-bg: #d1d3d9;
+      --kb-key: #ffffff;
+      --kb-key-fg: #2c2d3a;
+      --kb-special: #a8abb4;
+      --status: #2c2d3a;
+      --fab-inactive: #b3e5fc;
+    }
+    [data-theme="dark"] {
+      --wave: #40c4ff;
+      --wave-deep: #0288d1;
+      --white: #0d1217;
+      --text: #ffffff;
+      --muted: #9a9bb1;
+      --line: #4a4b62;
+      --error: #f6695e;
+      --bg: #0d1217;
+      --kb-bg: #1c1f26;
+      --kb-key: #2c2d3a;
+      --kb-key-fg: #ffffff;
+      --kb-special: #393a4c;
+      --status: #ffffff;
+      --fab-inactive: #1b526b;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Roboto, system-ui, sans-serif;
+      background: #1a1d23;
+      min-height: 100vh;
+      padding: 24px;
+      color: var(--text);
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: space-between;
+      align-items: flex-start;
+      max-width: 1480px;
+      margin: 0 auto 20px;
+    }
+    .toolbar h1 { font-size: 18px; font-weight: 600; color: #fff; }
+    .toolbar .meta { font-size: 13px; color: #9a9bb1; margin-top: 4px; max-width: 560px; line-height: 1.4; }
+    .toolbar a { color: #40c4ff; }
+    .controls { display: flex; flex-wrap: wrap; gap: 8px; max-width: 760px; justify-content: flex-end; }
+    .controls .grp { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .controls .lbl {
+      font-size: 11px; color: #686a8a; text-transform: uppercase; letter-spacing: 0.04em; margin-right: 2px;
+    }
+    .controls button {
+      font-family: inherit; font-size: 12px; font-weight: 500;
+      padding: 7px 12px; border-radius: 20px;
+      border: 1px solid #4a4b62; background: #292929; color: #fff; cursor: pointer;
+    }
+    .controls button.active { background: #40c4ff; border-color: #40c4ff; color: #0d1217; }
+
+    .stage-wrap { display: flex; justify-content: center; max-width: 1480px; margin: 0 auto; }
+
+    .phone {
+      width: 393px;
+      height: 852px;
+      background: var(--bg);
+      border-radius: 28px;
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+      display: flex;
+      flex-direction: column;
+    }
+    [data-device="tablet"] .phone {
+      width: 420px;
+      height: 860px;
+      border-radius: 20px;
+    }
+    [data-device="desktop"] .frame {
+      width: 1440px;
+      max-width: 100%;
+      height: 900px;
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+    }
+    [data-device="desktop"] .phone { display: none; }
+    [data-device="phone"] .frame,
+    [data-device="tablet"] .frame { display: none; }
+
+    .brand-pane {
+      flex: 0 0 40%;
+      background: linear-gradient(127deg, #1565c0, #0f4888);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 48px;
+      gap: 16px;
+    }
+    .brand-pane .mark {
+      width: 64px; height: 64px; border-radius: 16px;
+      background: rgba(255,255,255,0.15);
+      display: grid; place-items: center; font-size: 22px; font-weight: 700;
+    }
+    .brand-pane h2 { font-size: 32px; font-weight: 700; }
+    .brand-pane p { font-size: 16px; opacity: 0.85; max-width: 320px; line-height: 1.5; }
+    .desktop-form {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg);
+      padding: 32px;
+    }
+    .desktop-form .phone {
+      display: block;
+      width: 393px;
+      height: 720px;
+      border-radius: 24px;
+      border: 1px solid var(--line);
+      box-shadow: none;
+    }
+    .desktop-form .phone .kb { display: none !important; }
+    .desktop-form .phone .home { display: none; }
+
+    .status {
+      height: 44px;
+      padding: 12px 28px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      z-index: 2;
+    }
+
+    .wave {
+      background: linear-gradient(160deg, var(--wave) 0%, var(--wave-deep) 100%);
+      color: #fff;
+      padding: 52px 24px 56px;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .wave::after {
+      content: "";
+      position: absolute;
+      left: 0; right: 0; bottom: -1px;
+      height: 48px;
+      background: var(--bg);
+      border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+    }
+    .wave-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      min-height: 36px;
+      margin-bottom: 18px;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 32px;
+      padding: 0 14px;
+      border-radius: 16px;
+      border: 1.5px solid rgba(255,255,255,0.85);
+      background: transparent;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 500;
+      font-family: inherit;
+    }
+    .pill svg { width: 14px; height: 14px; fill: #fff; }
+    .wave h1 {
+      font-size: 34px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      position: relative;
+      z-index: 1;
+    }
+    .wave .sub {
+      margin-top: 6px;
+      font-size: 14px;
+      font-weight: 400;
+      opacity: 0.92;
+      position: relative;
+      z-index: 1;
+      max-width: 260px;
+      line-height: 1.35;
+    }
+
+    .body {
+      flex: 1;
+      padding: 8px 28px 16px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      min-height: 0;
+    }
+
+    .field { margin-bottom: 22px; }
+    .field .hint {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+    .field .hint.err { color: var(--error); }
+    .uline {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-bottom: 10px;
+      border-bottom: 1.5px solid var(--line);
+      min-height: 28px;
+    }
+    .uline.focus { border-bottom-color: var(--wave); }
+    .uline.err { border-bottom-color: var(--error); }
+    .uline .ph { color: var(--muted); font-size: 16px; flex: 1; }
+    .uline .val { color: var(--text); font-size: 16px; flex: 1; font-weight: 500; }
+    .uline .caret {
+      width: 2px; height: 18px;
+      background: var(--wave);
+      animation: blink 1s step-end infinite;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+    .uline .ico {
+      width: 20px; height: 20px;
+      fill: var(--muted);
+      flex-shrink: 0;
+    }
+    .uline .lead {
+      width: 22px; height: 22px;
+      fill: var(--muted);
+      flex-shrink: 0;
+    }
+
+    .row-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 4px;
+      gap: 12px;
+    }
+    .remember {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      color: var(--text);
+    }
+    .remember .box {
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      border: 1.5px solid var(--wave);
+      display: grid; place-items: center;
+      flex-shrink: 0;
+    }
+    .remember .box.on {
+      background: var(--wave);
+      border-color: var(--wave);
+    }
+    .remember .box.on svg { width: 12px; height: 12px; fill: #fff; }
+    .forgot {
+      font-size: 13px;
+      color: var(--muted);
+      text-decoration: none;
+      margin-left: auto;
+    }
+
+    .fab-wrap {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: auto;
+      padding: 12px 0 8px;
+    }
+    .fab {
+      width: 64px; height: 64px;
+      border-radius: 50%;
+      border: none;
+      background: var(--wave);
+      display: grid; place-items: center;
+      box-shadow: 0 8px 20px rgba(64, 196, 255, 0.35);
+      cursor: default;
+    }
+    .fab.off {
+      background: var(--fab-inactive);
+      box-shadow: none;
+      opacity: 0.7;
+    }
+    .fab svg { width: 26px; height: 26px; fill: #fff; }
+
+    .sent {
+      text-align: center;
+      padding: 24px 8px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .sent strong { display: block; color: var(--text); font-size: 16px; margin-bottom: 8px; }
+
+    .kb {
+      background: var(--kb-bg);
+      padding: 8px 4px 10px;
+      flex-shrink: 0;
+    }
+    .kb-row {
+      display: flex;
+      justify-content: center;
+      gap: 5px;
+      margin-bottom: 7px;
+    }
+    .kb-key {
+      height: 42px;
+      min-width: 32px;
+      flex: 1;
+      max-width: 36px;
+      border-radius: 5px;
+      background: var(--kb-key);
+      color: var(--kb-key-fg);
+      display: grid; place-items: center;
+      font-size: 16px;
+      font-weight: 400;
+      box-shadow: 0 1px 0 rgba(0,0,0,0.15);
+    }
+    .kb-key.wide { max-width: 48px; flex: 1.3; background: var(--kb-special); font-size: 12px; }
+    .kb-key.space { max-width: none; flex: 4; }
+    .kb-key.ret { max-width: 72px; flex: 1.6; background: var(--kb-special); font-size: 13px; }
+
+    .home {
+      position: absolute;
+      bottom: 6px; left: 50%;
+      transform: translateX(-50%);
+      width: 120px; height: 4px;
+      border-radius: 2px;
+      background: var(--text);
+      opacity: 0.18;
+      z-index: 3;
+    }
+
+    .note {
+      max-width: 1480px;
+      margin: 16px auto 0;
+      font-size: 12px;
+      color: #686a8a;
+      line-height: 1.45;
+    }
+    .note a { color: #40c4ff; }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <div>
+      <h1>E-Chat — Auth Email / Password</h1>
+      <div class="meta">
+        Стиль как в Figma Login/Register (волна, underline, круглая стрелка).
+        Референс: <a href="./ref-login-signup-phone.png">ref-login-signup-phone.png</a> ·
+        спека: <a href="./auth-email.md">auth-email.md</a>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="grp">
+        <span class="lbl">Тема</span>
+        <button type="button" data-set="theme" data-value="light" class="active">Light</button>
+        <button type="button" data-set="theme" data-value="dark">Dark</button>
+      </div>
+      <div class="grp">
+        <span class="lbl">Устройство</span>
+        <button type="button" data-set="device" data-value="phone" class="active">Phone</button>
+        <button type="button" data-set="device" data-value="tablet">Tablet</button>
+        <button type="button" data-set="device" data-value="desktop">Desktop</button>
+      </div>
+      <div class="grp">
+        <span class="lbl">Login</span>
+        <button type="button" data-set="screen" data-value="login-empty" class="active">Empty</button>
+        <button type="button" data-set="screen" data-value="login-typing">Typing</button>
+        <button type="button" data-set="screen" data-value="login-filled">Filled</button>
+        <button type="button" data-set="screen" data-value="login-error">Error</button>
+      </div>
+      <div class="grp">
+        <span class="lbl">Register</span>
+        <button type="button" data-set="screen" data-value="register-empty">Empty</button>
+        <button type="button" data-set="screen" data-value="register-typing">Typing</button>
+        <button type="button" data-set="screen" data-value="register-filled">Filled</button>
+        <button type="button" data-set="screen" data-value="register-error">Error</button>
+      </div>
+      <div class="grp">
+        <span class="lbl">Forgot</span>
+        <button type="button" data-set="screen" data-value="forgot-empty">Empty</button>
+        <button type="button" data-set="screen" data-value="forgot-filled">Filled</button>
+        <button type="button" data-set="screen" data-value="forgot-sent">Sent</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="stage-wrap" id="stage"></div>
+  <p class="note">
+    В Figma — телефон + OTP. Здесь те же фреймы, поля заменены на Email / Password (без Verification).
+    Источник:
+    <a href="https://www.figma.com/design/Do69JP5vfRzBNw3OO2jRHH/Chatting-App-UI-Kit-Design-_-E-Chat-_-Figma--Community-?node-id=21-122" target="_blank" rel="noopener">Figma E-Chat</a>.
+  </p>
+
+  <script>
+    const svgCheck = `<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>`;
+    const svgArrow = `<svg viewBox="0 0 24 24"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>`;
+    const svgBack = `<svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>`;
+    const svgEye = `<svg class="ico" viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>`;
+    const svgMail = `<svg class="lead" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>`;
+    const svgLock = `<svg class="lead" viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>`;
+    const svgUser = `<svg class="lead" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`;
+
+    function kbHtml() {
+      const row = (keys, cls = "") =>
+        `<div class="kb-row">${keys.map((k) => {
+          const c = k.length > 1 ? `kb-key ${k === "space" ? "space" : k === "return" ? "ret" : "wide"}` : "kb-key";
+          const label = k === "space" ? "" : k === "shift" ? "⇧" : k === "del" ? "⌫" : k === "123" ? "123" : k === "return" ? "return" : k;
+          return `<div class="${c}">${label}</div>`;
+        }).join("")}</div>`;
+      return `<div class="kb">
+        ${row("qwertyuiop".split(""))}
+        ${row("asdfghjkl".split(""))}
+        ${row(["shift", ..."zxcvbnm".split(""), "del"])}
+        ${row(["123", "space", "return"])}
+      </div>`;
+    }
+
+    function uline(opts) {
+      const { lead, ph, val, focus, err, trail } = opts;
+      const cls = ["uline", focus ? "focus" : "", err ? "err" : ""].filter(Boolean).join(" ");
+      let inner;
+      if (val && focus) {
+        inner = `<span class="val">${val}</span><span class="caret"></span>`;
+      } else if (val) {
+        inner = `<span class="val">${val}</span>`;
+      } else {
+        inner = `<span class="ph">${ph}</span>`;
+      }
+      return `<div class="${cls}">${lead || ""}${inner}${trail || ""}</div>`;
+    }
+
+    function fab(active) {
+      return `<div class="fab-wrap"><button type="button" class="fab ${active ? "" : "off"}" aria-label="Continue">${svgArrow}</button></div>`;
+    }
+
+    function loginScreen(state) {
+      const empty = state === "empty";
+      const typing = state === "typing";
+      const filled = state === "filled";
+      const err = state === "error";
+      const ready = filled || err;
+      const showKb = typing || filled || err;
+
+      const emailVal = empty ? "" : typing ? "alex.rivera@" : "alex.rivera@mail.com";
+      const passVal = ready ? "••••••••" : "";
+
+      return `
+        <div class="status"><span>9:41</span><span>▮▮▮ Wi‑Fi</span></div>
+        <div class="wave">
+          <div class="wave-top">
+            <span></span>
+            <button type="button" class="pill">Register</button>
+          </div>
+          <h1>Login</h1>
+          <p class="sub">Enter your email and password</p>
+        </div>
+        <div class="body">
+          <div class="field">
+            <div class="hint ${err ? "err" : ""}">${err ? "Wrong email or password" : "Email address"}</div>
+            ${uline({
+              lead: svgMail,
+              ph: "Email",
+              val: emailVal,
+              focus: typing,
+              err,
+            })}
+          </div>
+          <div class="field">
+            <div class="hint">Password</div>
+            ${uline({
+              lead: svgLock,
+              ph: "Password",
+              val: passVal,
+              focus: false,
+              err,
+              trail: svgEye,
+            })}
+          </div>
+          <div class="row-actions">
+            <div class="remember">
+              <span class="box ${ready ? "on" : ""}">${ready ? svgCheck : ""}</span>
+              Remember me
+            </div>
+            <a class="forgot" href="#">Forgot password?</a>
+          </div>
+          ${fab(ready)}
+        </div>
+        ${showKb ? kbHtml() : ""}
+        <div class="home"></div>`;
+    }
+
+    function registerScreen(state) {
+      const empty = state === "empty";
+      const typing = state === "typing";
+      const filled = state === "filled";
+      const err = state === "error";
+      const ready = filled || err;
+      const showKb = typing || filled || err;
+
+      const nameVal = empty ? "" : typing ? "Alex" : "Alex Rivera";
+      const emailVal = ready ? "alex.rivera@mail.com" : "";
+      const passVal = ready ? "••••••••" : "";
+
+      return `
+        <div class="status"><span>9:41</span><span>▮▮▮ Wi‑Fi</span></div>
+        <div class="wave">
+          <div class="wave-top">
+            <button type="button" class="pill">${svgBack} Login</button>
+            <span></span>
+          </div>
+          <h1>Register</h1>
+          <p class="sub">Create your account</p>
+        </div>
+        <div class="body">
+          <div class="field">
+            <div class="hint">Your name</div>
+            ${uline({
+              lead: svgUser,
+              ph: "Name",
+              val: nameVal,
+              focus: typing,
+            })}
+          </div>
+          <div class="field">
+            <div class="hint ${err ? "err" : ""}">${err ? "Email already registered" : "Email address"}</div>
+            ${uline({
+              lead: svgMail,
+              ph: "Email",
+              val: emailVal,
+              err,
+            })}
+          </div>
+          <div class="field">
+            <div class="hint">Password</div>
+            ${uline({
+              lead: svgLock,
+              ph: "Password",
+              val: passVal,
+              trail: svgEye,
+            })}
+          </div>
+          ${fab(ready)}
+        </div>
+        ${showKb ? kbHtml() : ""}
+        <div class="home"></div>`;
+    }
+
+    function forgotScreen(state) {
+      if (state === "sent") {
+        return `
+          <div class="status"><span>9:41</span><span>▮▮▮ Wi‑Fi</span></div>
+          <div class="wave">
+            <div class="wave-top">
+              <button type="button" class="pill">${svgBack} Login</button>
+              <span></span>
+            </div>
+            <h1>Check email</h1>
+            <p class="sub">We sent a reset link</p>
+          </div>
+          <div class="body">
+            <div class="sent">
+              <strong>Letter sent</strong>
+              Open your inbox and follow the link to set a new password.
+            </div>
+          </div>
+          <div class="home"></div>`;
+      }
+
+      const filled = state === "filled";
+      return `
+        <div class="status"><span>9:41</span><span>▮▮▮ Wi‑Fi</span></div>
+        <div class="wave">
+          <div class="wave-top">
+            <button type="button" class="pill">${svgBack} Login</button>
+            <span></span>
+          </div>
+          <h1>Forgot password</h1>
+          <p class="sub">Enter your email to reset</p>
+        </div>
+        <div class="body">
+          <div class="field">
+            <div class="hint">Email address</div>
+            ${uline({
+              lead: svgMail,
+              ph: "Email",
+              val: filled ? "alex.rivera@mail.com" : "",
+            })}
+          </div>
+          ${fab(filled)}
+        </div>
+        ${filled ? kbHtml() : ""}
+        <div class="home"></div>`;
+    }
+
+    function screenHtml(screen) {
+      const [flow, state] = screen.split("-");
+      if (flow === "login") return loginScreen(state);
+      if (flow === "register") return registerScreen(state);
+      return forgotScreen(state);
+    }
+
+    function render() {
+      const device = document.documentElement.getAttribute("data-device");
+      const screen = document.documentElement.getAttribute("data-screen");
+      const inner = screenHtml(screen);
+      const stage = document.getElementById("stage");
+
+      if (device === "desktop") {
+        stage.innerHTML = `
+          <div class="frame">
+            <div class="brand-pane">
+              <div class="mark">E</div>
+              <h2>E-Chat</h2>
+              <p>Тот же Login / Register, что в phone-ките Figma — с Email и Password.</p>
+            </div>
+            <div class="desktop-form"><div class="phone">${inner}</div></div>
+          </div>`;
+      } else {
+        stage.innerHTML = `<div class="phone">${inner}</div>`;
+      }
+    }
+
+    document.querySelectorAll("[data-set]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const key = btn.getAttribute("data-set");
+        const value = btn.getAttribute("data-value");
+        document.documentElement.setAttribute(`data-${key}`, value);
+        document.querySelectorAll(`[data-set="${key}"]`).forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        render();
+      });
+    });
+
+    render();
+  </script>
+</body>
+</html>

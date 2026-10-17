@@ -101,7 +101,7 @@ abstract final class EChatColors {
 
   // ─── ColorScheme ──────────────────────────────────────────────────────────
 
-  static ColorScheme get lightColorScheme => ColorScheme.light(
+  static ColorScheme get lightColorScheme => const ColorScheme.light(
         primary: blue500,
         onPrimary: white,
         primaryContainer: blue50,
@@ -121,7 +121,7 @@ abstract final class EChatColors {
         onErrorContainer: error500,
       );
 
-  static ColorScheme get darkColorScheme => ColorScheme.dark(
+  static ColorScheme get darkColorScheme => const ColorScheme.dark(
         primary: lightBlue500,
         onPrimary: neutral900Dark,
         primaryContainer: blue900,

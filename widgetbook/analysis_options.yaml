@@ -1,0 +1,29 @@
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  exclude:
+    - .dart_tool/**
+    - build/**
+    - '**/*.g.dart'
+    - android/**
+    - ios/**
+    - web/**
+    - windows/**
+  errors:
+    # Песочница намеренно импортирует виджеты из lib/src приложения.
+    implementation_imports: ignore
+  language:
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
+
+linter:
+  rules:
+    prefer_single_quotes: true
+    require_trailing_commas: true
+    avoid_print: true
+    prefer_const_constructors: true
+    prefer_const_literals_to_create_immutables: true
+    sized_box_for_whitespace: true
+    use_key_in_widget_constructors: true
+    avoid_unnecessary_containers: true

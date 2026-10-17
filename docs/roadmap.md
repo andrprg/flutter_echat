@@ -70,7 +70,7 @@
 ### 0.3. UI / Design system (dumb)
 
 - [x] Перенести цвета E-Chat из Figma (Blue `#1565C0`, Light Blue `#40C4FF`, …)
-- [ ] Подключить шрифт **Roboto** (Google Fonts)
+- [x] Подключить шрифт **Roboto** (локальные ассеты `assets/fonts/`)
 - [ ] Базовые **dumb**-компоненты: `TChatButton`, `TTextField`, `TAppBar`, `TAvatar`
 - [x] Тема Light / Dark (`TAppTheme` + `widget_themes` по макету)
 - [x] Density / spacing tokens с учётом desktop (`TSizes` pane widths, `maxContentWidth`) — [layouts-tablet-desktop.md](./layouts-tablet-desktop.md), [mockups](./mockups/echat-tablet-desktop.html), [coverage](./mockups/coverage-vs-figma.md)
@@ -120,7 +120,7 @@
 ### 1.2. Firebase Console
 
 - [ ] Создать проект Firebase
-- [ ] Включить **Authentication → Phone**
+- [ ] Включить **Authentication → Email/Password**
 - [ ] Создать **Firestore** (production mode)
 - [ ] Создать **Realtime Database**
 - [ ] Создать **Storage**
@@ -174,9 +174,9 @@
 
 ### 2.2. Feature `auth` — domain & data
 
-- [ ] Entity: `AuthUser`, `PhoneAuthSession`
+- [ ] Entity: `AuthUser`
 - [ ] `AuthRepository` interface → `Either<Failure, T>`
-- [ ] `AuthRemoteDataSource` — Firebase Phone Auth
+- [ ] `AuthRemoteDataSource` — Firebase Auth (Email/Password)
 - [ ] `UserRemoteDataSource` — CRUD `users/{uid}`
 - [ ] DTO: `UserDto` + маппинг в entity
 - [ ] `@Riverpod(keepAlive) authRepositoryProvider`
@@ -187,8 +187,8 @@
 
 - [ ] **Login _ Empty / Typing / Filled** — dumb `LoginView`; smart `LoginScreen`
 - [x] **Register** — страница регистрации задокументирована в [architecture_echat.md §3.5](./architecture_echat.md#35-пример-страница-регистрации-auth--register): фича `features/auth/presentation/register/` — `RegisterScreen` (smart) + `RegisterView` (dumb) + `RegisterController` (`@riverpod`) + `RegisterState` (Freezed)
-- [x] **Register → Firebase** — поток Phone Auth + профиль: [firebase-registration.md](./firebase-registration.md)
-- [ ] **Register UI** — реализация полей Name / Phone / Password, чекбокс Terms, кнопка Register; `submit()` → `authRepository.signUp(...)` → `/home`
+- [x] **Register → Firebase** — поток Email/Password + профиль: [firebase-registration.md](./firebase-registration.md)
+- [ ] **Register UI** — реализация полей Name / Email / Password, чекбокс Terms, кнопка Register; `submit()` → `authRepository.signUp(...)` → `/home`
 - [ ] Checkbox **Remember me** → `SharedPreferences`
 - [ ] `LoginController` (@riverpod Notifier) + `LoginState` (Freezed) — один на все ширины
 - [ ] Wide: форма в колонке с max-width, не full-bleed phone layout
@@ -203,7 +203,7 @@
 
 - [ ] **Sign Up _ User Information** — имя + аватар (dumb form)
 - [ ] Загрузка аватара → Storage `avatars/{uid}/`
-- [ ] Создание `users/{uid}` (displayName, phone, eChatPublicId, …)
+- [ ] Создание `users/{uid}` (displayName, email, eChatPublicId, …)
 - [ ] Redirect → Security setup или Home
 
 
@@ -246,7 +246,7 @@
 
 - [ ] Подпапка `presentation/chat_list/`: `ChatListView` (dumb) + `ChatListController` + `ChatListState` (Freezed)
 - [ ] `ChatListScreen` (smart) — phone full-screen `/chats` и/или маппинг list→props внутри shell
-- [ ] `chatListStreamProvider` (`@riverpod Stream<Either<Failure, List<Chat>>>`) + `ChatListController` (AsyncNotifier, подписка через `ref.watch` / `ref.onDispose`) — **один** Notifier на все форм-факторы (не отдельный «для desktop»)
+- [ ] `chatListStreamProvider` (`@riverpod Stream<Either<Failure, List<Chat>>>`) + `ChatListController` (AsyncNotifier, данные через `ref.watch` / `ref.listen` на stream-провайдер — без ручного `StreamSubscription` в `build`) — **один** Notifier на все форм-факторы (не отдельный «для desktop»)
 - [ ] UI: last message, time, unread — как в Figma **Chats**
 - [ ] Pull-to-refresh (phone/tablet); на desktop — refresh action / focus shortcut
 - [ ] **Chats _ Click Search** — фильтрация по имени locally
@@ -257,7 +257,7 @@
 
 ### 3.3. Add Friend
 
-- [ ] **Add Function _ Add Friend** — поиск по телефону / имени (dumb dialog/page)
+- [ ] **Add Function _ Add Friend** — поиск по eChatPublicId / имени (dumb dialog/page)
 - [ ] **Add Friend _ Searching** — debounce query
 - [ ] `ContactRepository` + запись `contacts/{ownerId_peerId}`
 - [ ] Создание direct chat при первом сообщении
@@ -350,7 +350,7 @@
 
 ### 5.1. Profile
 
-- [ ] **Profile** — `ProfileScreen` + `ProfileView`: аватар, имя, phone, eChatPublicId (copy)
+- [ ] **Profile** — `ProfileScreen` + `ProfileView`: аватар, имя, email, eChatPublicId (copy)
 - [ ] **Profile _ Edit** — изменение имени, аватара, about
 - [ ] `UserRepository` + `UserController`
 - [ ] **Logout** — `FirebaseAuth.signOut` + clear local state

@@ -50,7 +50,7 @@ com.example.flutter_echat
 2. **Добавить приложение** → **Android**:
    - Имя пакета: `com.example.flutter_echat`
    - Псевдоним: `flutter_echat` (любой)
-   - SHA-1 для debug можно добавить позже (нужен для Phone Auth)
+   - SHA-1 для debug можно добавить позже (понадобится для Google Sign-In, если появится)
 3. **Добавить приложение** → **iOS** (если собираете под iPhone):
    - Bundle ID: укажите тот, что в Xcode (по умолчанию часто `com.example.flutterEchat`)
 4. Конфиги `google-services.json` и `GoogleService-Info.plist` **скачивать вручную не обязательно** — их создаст `flutterfire configure`.
@@ -167,9 +167,9 @@ plugins {
 }
 ```
 
-### 6.2. minSdk для Firebase Auth (Phone)
+### 6.2. minSdk для Firebase Auth
 
-Phone Auth требует **minSdk 23+**:
+Для Firebase Auth держим **minSdk 23+** (как в roadmap; запас под Play Integrity и провайдеры OAuth):
 
 ```kotlin
 defaultConfig {
@@ -219,7 +219,7 @@ cd ..
 flutter run -d ios
 ```
 
-Для **Phone Auth** на iOS позже понадобятся Push Notifications и APNs key — см. [firebase-setup.md §7](./firebase-setup.md#7-authentication-телефон).
+Для **push-уведомлений (FCM)** на iOS позже понадобятся Push Notifications и APNs key — см. [firebase-setup.md §7](./firebase-setup.md#7-authentication).
 
 ---
 
@@ -331,14 +331,14 @@ Firebase **подключён** к Flutter, когда есть:
 
 | Шаг | Документ |
 | --- | --- |
-| Phone Auth, Firestore, Storage, FCM, rules | [firebase-setup.md](./firebase-setup.md) |
-| Регистрация (Phone Auth + `users`) | [firebase-registration.md](./firebase-registration.md) |
+| Auth (Email/Password), Firestore, Storage, FCM, rules | [firebase-setup.md](./firebase-setup.md) |
+| Регистрация (Email/Password + `users`) | [firebase-registration.md](./firebase-registration.md) |
 | Коллекции и поля | [firebase-database.md](./firebase-database.md) |
 | Отслеживание событий | [firebase-events.md](./firebase-events.md) |
 
 Краткий порядок:
 
-1. В Console включить **Authentication → Phone**
+1. В Console включить **Authentication → Email/Password**
 2. Создать **Firestore** и **Storage**
 3. Задеплоить rules: `firebase deploy --only firestore:rules,storage`
 4. Реализовать экраны Login → Profile
@@ -383,6 +383,6 @@ cd ios && pod install && cd ..
 - [Официальная документация: Add Firebase to Flutter](https://firebase.google.com/docs/flutter/setup)
 - [FlutterFire CLI](https://firebase.google.com/docs/flutter/setup#install-cli)
 - [firebase-setup.md](./firebase-setup.md) — настройка сервисов под E-Chat
-- [firebase-registration.md](./firebase-registration.md) — регистрация Phone Auth + профиль
+- [firebase-registration.md](./firebase-registration.md) — регистрация Email/Password + профиль
 - [firebase-database.md](./firebase-database.md) — структура Firestore
 - [firebase-events.md](./firebase-events.md) — Console, логи Functions, Analytics

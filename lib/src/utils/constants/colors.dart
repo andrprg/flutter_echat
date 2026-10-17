@@ -3,18 +3,18 @@ import 'package:flutter/material.dart';
 /// Палитра E-Chat из Figma Design Tokens.
 ///
 /// Источник: [Chatting App UI Kit | E-Chat](https://www.figma.com/design/Do69JP5vfRzBNw3OO2jRHH/Chatting-App-UI-Kit-Design-_-E-Chat-_-Figma--Community-?node-id=21-122)
-/// (канвас Light Mode + Dark Mode).
+/// (канвас Light Mode + Dark Mode). Справочная копия — [docs/echat_colors.dart].
 class TColors {
   TColors._();
 
-  // ─── Brand / Blue ──────────────────────────────────────────────────────────
+  // ─── Brand / Blue ─────────────────────────────────────────────────────────
 
   static const Color blue50 = Color(0xFFE8F0F9);
   static const Color blue400 = Color(0xFF4484CD);
   static const Color blue500 = Color(0xFF1565C0);
   static const Color blue900 = Color(0xFF092A51);
 
-  // ─── Brand / Light Blue (акцент, кнопки, onboarding) ────────────────────────
+  // ─── Brand / Light Blue (акцент, кнопки, onboarding) ──────────────────────
 
   static const Color lightBlue50 = Color(0xFFECF9FF);
   static const Color lightBlue100 = Color(0xFFC4EDFF);
@@ -25,7 +25,7 @@ class TColors {
   static const Color lightBlue600 = Color(0xFF3AB2E8);
   static const Color lightBlue900 = Color(0xFF1B526B);
 
-  // ─── Neutrals ──────────────────────────────────────────────────────────────
+  // ─── Neutrals ─────────────────────────────────────────────────────────────
 
   static const Color white = Color(0xFFFFFFFF);
   static const Color black = Color(0xFF292929);
@@ -49,9 +49,11 @@ class TColors {
   static const Color divider = Color(0xFFE7E7E7);
   static const Color placeholder = Color(0xFFD9D9D9);
 
-  // ─── Semantic ──────────────────────────────────────────────────────────────
+  // ─── Semantic ─────────────────────────────────────────────────────────────
 
   static const Color error50 = Color(0xFFFEECEB);
+  /// Dark mode — фон иконки в toast ошибки (макет: `--error-container`).
+  static const Color error50Dark = Color(0xFF661C17);
   static const Color error400 = Color(0xFFF6695E);
   static const Color error500 = Color(0xFFF44336);
 
@@ -59,15 +61,17 @@ class TColors {
   static const Color success500 = Color(0xFF00C853);
   static const Color success500Alt = Color(0xFF13C296);
 
+  /// Индикатор «онлайн».
+  static const Color onlineGreen = success500Alt;
+
   static const Color warning400 = Color(0xFFFFD233);
 
   static const Color navyBlue = Color(0xFF1A47B8);
 
-  // ─── Chat bubble accents (Custom Color Chat) ───────────────────────────────
-
+  /// Акцент пузыря чата (Custom Color Chat).
   static const Color chatAccentCoral = Color(0xFFFF6347);
 
-  // ─── Gradients (Figma: 127deg) ─────────────────────────────────────────────
+  // ─── Gradients (Figma: 127deg) ────────────────────────────────────────────
 
   /// Gradient Blue — logo, акцентные блоки.
   static const LinearGradient gradientBlue = LinearGradient(
@@ -83,7 +87,17 @@ class TColors {
     colors: [Color(0xFF40C4FF), Color(0xFF03A9F4)],
   );
 
-  // ─── Shadows ───────────────────────────────────────────────────────────────
+  /// Градиентные плейсхолдеры аватаров — как в ките E-Chat.
+  static const List<List<Color>> avatarGradients = [
+    [Color(0xFF1565C0), Color(0xFF0F4888)],
+    [Color(0xFF40C4FF), Color(0xFF0288D1)],
+    [Color(0xFFFF8A65), Color(0xFFF4511E)],
+    [Color(0xFFBA68C8), Color(0xFF8E24AA)],
+    [Color(0xFF13C296), Color(0xFF0A8F6C)],
+    [Color(0xFFF06292), Color(0xFFC2185B)],
+  ];
+
+  // ─── Shadows ──────────────────────────────────────────────────────────────
 
   /// Shadow 2 — boxShadow: 0px 4px 12px rgba(0,0,0,0.06).
   static const List<BoxShadow> shadow2 = [
@@ -94,7 +108,7 @@ class TColors {
     ),
   ];
 
-  // ─── ColorScheme ───────────────────────────────────────────────────────────
+  // ─── ColorScheme ──────────────────────────────────────────────────────────
 
   static ColorScheme get lightColorScheme => const ColorScheme.light(
         primary: blue500,
@@ -132,26 +146,7 @@ class TColors {
         outlineVariant: neutral800,
         error: error400,
         onError: neutral900Dark,
-        errorContainer: Color(0xFF3D1F1D),
+        errorContainer: error50Dark,
         onErrorContainer: error400,
       );
-}
-
-/// Семантические алиасы для UI-компонентов чата (по макету E-Chat).
-class TSemanticColors {
-  TSemanticColors._();
-
-  static const Color chatBubbleOutgoing = TColors.lightBlue500;
-  static const Color chatBubbleIncomingLight = TColors.neutral50;
-  static const Color chatBubbleIncomingDark = TColors.neutral800;
-
-  static const Color unreadBadge = TColors.blue500;
-  static const Color onlineIndicator = TColors.success500Alt;
-
-  static const Color messageSent = TColors.neutral300;
-  static const Color messageDelivered = TColors.lightBlue500;
-  static const Color messageRead = TColors.blue500;
-
-  static const Color codeError = TColors.error500;
-  static const Color codeFilled = TColors.blue500;
 }

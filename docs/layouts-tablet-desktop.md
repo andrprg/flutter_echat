@@ -18,6 +18,8 @@
 | Tablet | 600 … 1023 | **768×1024** (portrait), **1024×768** (landscape → desktop) |
 | Desktop | ≥ 1024 | **1440×900** |
 
+**Tablet landscape (1024×768).** Ширина 1024 уже за порогом desktop (`≥1024`), поэтому chrome — sidebar 240 (при нехватке места схлопывается в rail 72, см. §3). Композиция: **TwoPane** master 300 + detail 484. **ThreePane недоступен**: 240+320+320=880 не оставляет места переписке — инфо-панель открывается overlay 480, как на portrait. Звонки — центрированная панель 420×min(780, H−80). Auth — split (brand ≤40% + форма 440). Макеты: [design_kimi](./design_kimi/README.md) (форм-фактор «Tablet L»).
+
 Light и Dark — те же `ColorScheme` / семантические алиасы, что в Figma и `TColors`. Новые hex не вводить.
 
 ---

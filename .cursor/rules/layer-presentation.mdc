@@ -28,7 +28,7 @@ alwaysApply: false
 
 ## Notifier (`*_controller.dart`) + state (`*_state.dart`)
 
-- `@riverpod` AsyncNotifier / Notifier; Freezed UI state
+- `@riverpod` AsyncNotifier / Notifier; UI state — immutable класс (Freezed не обязателен)
 - Один controller на экран для **всех** phone/tablet/desktop
 - Either → state / `AsyncValue.error`; без MediaQuery и «это tablet?»
 

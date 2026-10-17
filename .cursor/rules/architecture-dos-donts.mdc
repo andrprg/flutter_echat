@@ -11,7 +11,7 @@ alwaysApply: true
 ## DO
 
 - `@riverpod` / `@Riverpod` для всех новых провайдеров (см. `riverpod`)
-- Freezed для state, entity, failure, DTO (см. `freezed`)
+- Freezed для entity, failure, DTO (см. `freezed`); UI state — не обязательно Freezed
 - `Either<Failure, T>` на границе domain ↔ data; цепочки 2+ — Do-нотация fpdart (см. `fpdart`)
 - `Option` для отсутствующих значений в domain; ошибки только через `Failure`
 - Навигация только через `go_router` (см. `go-router`)
@@ -29,7 +29,7 @@ alwaysApply: true
 - `ref` / `WidgetRef` в dumb (`*_view.dart`, shared widgets)
 - Кастомные виджеты без префикса `T` / файла `t_` (`ChatButton`, `EChatButton`)
 - Отдельные Notifier или копии фич «для tablet/desktop»
-- `setState` для бизнес-логики; мутабельный UI/domain state вместо Freezed
+- `setState` для бизнес-логики; мутабельный domain state (entity/Failure) вместо Freezed
 - `dynamic` / `Map<String, dynamic>` в domain и presentation
 - `catch (_) {}` без `Failure`; ошибки как `String` / `Option`
 - Вложенный `flatMap` вместо `*.Do(($ ) { ... })` при 2+ шагах
