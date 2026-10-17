@@ -133,7 +133,7 @@ class _ButtonContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return isLoading
-        ? const Center(child: _CircularProgress())
+        ? const _CircularProgress()
         : Text(
             label,
             style: TTextTheme.lightTextTheme.labelLarge?.copyWith(color: isDark ? TColors.neutral900 : TColors.white),
@@ -143,17 +143,18 @@ class _ButtonContent extends StatelessWidget {
 
 /// Круговой индикатор загрузки для [TButton.isLoading].
 ///
-/// Цвета — [TProgressIndicatorTheme.onPrimary]; толщина — [TProgressIndicatorTheme.buttonStrokeWidth].
+/// Цвета — как [TProgressIndicatorTheme.onPrimary]; размер 22×22 (design_kimi).
 class _CircularProgress extends StatelessWidget {
   const _CircularProgress();
 
   @override
   Widget build(BuildContext context) {
-    return Theme(
-      data: Theme.of(context).copyWith(
-        progressIndicatorTheme: TProgressIndicatorTheme.onPrimary,
-      ),
-      child: const CircularProgressIndicator(
+    return SizedBox(
+      width: 22,
+      height: 22,
+      child: CircularProgressIndicator(
+        color: TColors.white,
+        backgroundColor: TColors.white.withValues(alpha: 0.35),
         strokeWidth: TProgressIndicatorTheme.buttonStrokeWidth,
         strokeCap: StrokeCap.round,
       ),
