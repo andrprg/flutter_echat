@@ -16,7 +16,7 @@ Widget buildTButtonInteractive(BuildContext context) {
         variant: context.knobs.object.dropdown(
           label: 'variant',
           options: TButtonVariant.values,
-          labelBuilder: (value) => value?.name ?? '',
+          labelBuilder: (value) => value.name,
         ),
         isLoading: context.knobs.boolean(label: 'isLoading'),
         icon: showIcon

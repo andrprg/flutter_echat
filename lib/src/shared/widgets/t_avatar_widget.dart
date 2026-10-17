@@ -62,11 +62,14 @@ class TAvatarWidget extends StatelessWidget {
               child: Center(
                 child: Text(
                   initialsOf(name),
+                  textAlign: TextAlign.center,
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w600,
                     fontSize: size * 0.36,
                     height: 1,
+                    // Равномерный leading — иначе кириллица визуально уезжает вверх.
+                    leadingDistribution: TextLeadingDistribution.even,
                   ),
                 ),
               ),
