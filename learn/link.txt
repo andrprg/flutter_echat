@@ -1,0 +1,59 @@
+# Ссылки: Dismissible + Key (повторный показ того же текста)
+
+Тема: почему `Dismissible(key: ValueKey(message))` хрупок при повторном
+показе той же строки, и зачем внешний `ValueKey` / `ObjectKey` на баннере
+(`ValueKey(identityHashCode(banner))` или `ObjectKey(banner)`).
+
+---
+
+## Официальная документация Flutter / Dart
+
+Dismissible — ключ обязателен; после dismiss виджет нужно убрать из дерева
+https://api.flutter.dev/flutter/widgets/Dismissible-class.html
+
+Cookbook: swipe to dismiss (ключ + удаление из списка в onDismissed)
+https://docs.flutter.dev/cookbook/gestures/dismissible
+
+Widget.key — когда Element обновляется vs создаётся заново (remount)
+https://api.flutter.dev/flutter/widgets/Widget/key.html
+
+ValueKey — равенство по == значения (одинаковый текст → тот же ключ)
+https://api.flutter.dev/flutter/foundation/ValueKey-class.html
+
+ObjectKey — равенство по identical (identity экземпляра)
+https://api.flutter.dev/flutter/widgets/ObjectKey-class.html
+
+ObjectKey.hashCode — внутри используется identityHashCode(value)
+https://api.flutter.dev/flutter/widgets/ObjectKey/hashCode.html
+
+identityHashCode — хеш identity, не value-equality
+https://api.dart.dev/dart-core/identityHashCode.html
+
+identical — «тот же объект в памяти»
+https://api.dart.dev/dart-core/identical.html
+
+Блог Flutter: Keys! What are they good for?
+https://flutter.dev/blog/keys-what-are-they-good-for
+
+---
+
+## Stack Overflow (ошибка «dismissed Dismissible is still part of the tree»)
+
+Ключ от строки / дубликаты значений — типичный кейс
+https://stackoverflow.com/questions/51002775/flutter-dismissible-unique-keys
+
+Общий разбор assert + необходимость убрать виджет из дерева в onDismissed
+https://stackoverflow.com/questions/47735143/dismissing-a-dismissible-with-flutter-dart
+
+Ещё один кейс с ValueKey от значения списка
+https://stackoverflow.com/questions/69531929/flutter-a-dismissed-dismissible-widget-is-still-part-of-the-tree
+
+---
+
+## Дополнительно (обзор Keys)
+
+Using Keys in Flutter (ValueKey / ObjectKey / UniqueKey)
+https://apgapg.medium.com/using-keys-in-flutter-1c5fb586b2a5
+
+Исходник ObjectKey во Flutter (identical + identityHashCode)
+https://github.com/flutter/flutter/blob/main/packages/flutter/lib/src/widgets/framework.dart
