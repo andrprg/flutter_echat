@@ -16,7 +16,7 @@ part of 'error_banner_provider.dart';
 ///
 /// KeepAlive: баннер живёт вне шелла вкладок (Login / Register тоже его
 /// видят). Хост — `MaterialApp.builder` в `EChatApp` (`Stack` над
-/// навигатором + dumb `TErrorToast`). Не класть в `nav_shell`.
+/// навигатором + dumb `TErrorBannerWidget`). Не класть в `nav_shell`.
 ///
 /// Smart / Notifier после `fold`:
 /// ```dart
@@ -39,7 +39,7 @@ final errorBannerProvider = ErrorBannerProvider._();
 ///
 /// KeepAlive: баннер живёт вне шелла вкладок (Login / Register тоже его
 /// видят). Хост — `MaterialApp.builder` в `EChatApp` (`Stack` над
-/// навигатором + dumb `TErrorToast`). Не класть в `nav_shell`.
+/// навигатором + dumb `TErrorBannerWidget`). Не класть в `nav_shell`.
 ///
 /// Smart / Notifier после `fold`:
 /// ```dart
@@ -60,7 +60,7 @@ final class ErrorBannerProvider
   ///
   /// KeepAlive: баннер живёт вне шелла вкладок (Login / Register тоже его
   /// видят). Хост — `MaterialApp.builder` в `EChatApp` (`Stack` над
-  /// навигатором + dumb `TErrorToast`). Не класть в `nav_shell`.
+  /// навигатором + dumb `TErrorBannerWidget`). Не класть в `nav_shell`.
   ///
   /// Smart / Notifier после `fold`:
   /// ```dart
@@ -108,7 +108,7 @@ String _$errorBannerHash() => r'3aaa0f710f76645cbf71fd8fca774f226a850f7b';
 ///
 /// KeepAlive: баннер живёт вне шелла вкладок (Login / Register тоже его
 /// видят). Хост — `MaterialApp.builder` в `EChatApp` (`Stack` над
-/// навигатором + dumb `TErrorToast`). Не класть в `nav_shell`.
+/// навигатором + dumb `TErrorBannerWidget`). Не класть в `nav_shell`.
 ///
 /// Smart / Notifier после `fold`:
 /// ```dart

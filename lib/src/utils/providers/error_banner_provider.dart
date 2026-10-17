@@ -23,7 +23,7 @@ class ErrorBannerState {
 ///
 /// KeepAlive: баннер живёт вне шелла вкладок (Login / Register тоже его
 /// видят). Хост — `MaterialApp.builder` в `EChatApp` (`Stack` над
-/// навигатором + dumb `TErrorToast`). Не класть в `nav_shell`.
+/// навигатором + dumb `TErrorBannerWidget`). Не класть в `nav_shell`.
 ///
 /// Smart / Notifier после `fold`:
 /// ```dart
