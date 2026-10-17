@@ -38,7 +38,11 @@ class TIconWidget extends StatelessWidget {
 
   static BytesLoader _createLoader(String icon) {
     final name = icon.endsWith('.svg') ? icon : '$icon.svg';
-    return AssetBytesLoader('assets/icons/$name');
+    // packageName — чтобы иконки резолвились и из приложения, и из Widgetbook.
+    return AssetBytesLoader(
+      'assets/icons/$name',
+      packageName: 'flutter_echat',
+    );
   }
 
   @override

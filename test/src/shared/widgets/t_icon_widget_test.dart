@@ -58,10 +58,9 @@ void main() {
         wrap(const TIconWidget(icon: 'outline_search_magnifer')),
       );
 
-      expect(
-        findLoader(tester).assetName,
-        'assets/icons/outline_search_magnifer.svg',
-      );
+      final loader = findLoader(tester);
+      expect(loader.assetName, 'assets/icons/outline_search_magnifer.svg');
+      expect(loader.packageName, 'flutter_echat');
     });
 
     testWidgets('не дублирует .svg, если расширение уже указано', (
