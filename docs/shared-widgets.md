@@ -2,7 +2,7 @@
 
 Документ составлен по макетам [Chatting App UI Kit Design | E-Chat](https://www.figma.com/design/Do69JP5vfRzBNw3OO2jRHH/Chatting-App-UI-Kit-Design-_-E-Chat-_-Figma--Community-).
 
-Связанные материалы: [architecture_echat.md](./architecture_echat.md), [echat_colors.dart](./echat_colors.dart), [layouts-tablet-desktop.md](./layouts-tablet-desktop.md), [HTML-макеты tablet/desktop](./mockups/echat-tablet-desktop.html).
+Связанные материалы: [architecture_echat.md](./architecture_echat.md), [widgetbook.md](./widgetbook.md) (запуск песочницы), [echat_colors.dart](./echat_colors.dart), [layouts-tablet-desktop.md](./layouts-tablet-desktop.md), [HTML-макеты tablet/desktop](./mockups/echat-tablet-desktop.html).
 
 **Именование:** пользовательские виджеты — класс с префиксом `T` (`TChatButton`), файл `t_*.dart` (см. architecture §5 / правило `file-naming`).
 

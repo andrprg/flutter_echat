@@ -15,6 +15,8 @@ import 'package:flutter_echat_widgetbook/components/t_avatar.dart'
     as _flutter_echat_widgetbook_components_t_avatar;
 import 'package:flutter_echat_widgetbook/components/t_button.dart'
     as _flutter_echat_widgetbook_components_t_button;
+import 'package:flutter_echat_widgetbook/components/t_error_banner.dart'
+    as _flutter_echat_widgetbook_components_t_error_banner;
 import 'package:widgetbook/widgetbook.dart' as _widgetbook;
 
 final directories = <_widgetbook.WidgetbookNode>[
@@ -25,7 +27,7 @@ final directories = <_widgetbook.WidgetbookNode>[
         name: 'widgets',
         children: [
           _widgetbook.WidgetbookComponent(
-            name: 'TAvatar',
+            name: 'TAvatarWidget',
             useCases: [
               _widgetbook.WidgetbookUseCase(
                 name: 'Default',
@@ -45,7 +47,7 @@ final directories = <_widgetbook.WidgetbookNode>[
             ],
           ),
           _widgetbook.WidgetbookComponent(
-            name: 'TButton',
+            name: 'TButtonWidget',
             useCases: [
               _widgetbook.WidgetbookUseCase(
                 name: 'Danger',
@@ -71,6 +73,36 @@ final directories = <_widgetbook.WidgetbookNode>[
                 name: 'Primary',
                 builder: _flutter_echat_widgetbook_components_t_button
                     .buildTButtonPrimary,
+              ),
+            ],
+          ),
+          _widgetbook.WidgetbookComponent(
+            name: 'TErrorBannerWidget',
+            useCases: [
+              _widgetbook.WidgetbookUseCase(
+                name: 'Auth',
+                builder: _flutter_echat_widgetbook_components_t_error_banner
+                    .buildTErrorBannerAuth,
+              ),
+              _widgetbook.WidgetbookUseCase(
+                name: 'Interactive',
+                builder: _flutter_echat_widgetbook_components_t_error_banner
+                    .buildTErrorBannerInteractive,
+              ),
+              _widgetbook.WidgetbookUseCase(
+                name: 'Long message',
+                builder: _flutter_echat_widgetbook_components_t_error_banner
+                    .buildTErrorBannerLongMessage,
+              ),
+              _widgetbook.WidgetbookUseCase(
+                name: 'Network',
+                builder: _flutter_echat_widgetbook_components_t_error_banner
+                    .buildTErrorBannerNetwork,
+              ),
+              _widgetbook.WidgetbookUseCase(
+                name: 'Unexpected',
+                builder: _flutter_echat_widgetbook_components_t_error_banner
+                    .buildTErrorBannerUnexpected,
               ),
             ],
           ),

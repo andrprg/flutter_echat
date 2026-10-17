@@ -1,25 +1,16 @@
 # Widgetbook (E-Chat)
 
-Песочница для dumb-виджетов (`TButton`, `TAvatar`, …) без запуска основного приложения.
+Песочница для dumb-виджетов без запуска основного приложения.
 
-## Запуск
+Полная инструкция (запуск, hot reload, codegen, новый use case):
+**[docs/widgetbook.md](../docs/widgetbook.md)**
 
 ```bash
 cd widgetbook
+flutter pub get
 dart run build_runner build
 flutter run -d chrome
 ```
 
-В `dev_dependencies` нужен `vector_graphics_compiler`: при сборке Flutter трансформирует SVG из path-зависимости `flutter_echat`.
-
-После добавления или изменения `@UseCase` снова запустите codegen (или `watch`):
-
-```bash
-dart run build_runner watch -d
-```
-
-## Добавить виджет
-
-1. Создайте файл в `lib/components/` с функциями `@UseCase`.
-2. Импортируйте только dumb-виджеты из `package:flutter_echat/...`.
-3. Выполните `build_runner` — use case появится в дереве слева.
+Правка виджета в `lib/src/...` → в терминале `r` / `R`.  
+Правка `@UseCase` → снова `dart run build_runner build`.
