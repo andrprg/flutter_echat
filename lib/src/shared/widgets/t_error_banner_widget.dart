@@ -24,8 +24,8 @@ class TErrorBannerWidget extends StatelessWidget {
     super.key,
     required this.message,
     required this.onClose,
-    this.leftMargin = 0,
-    this.rightMargin = 0,
+    this.horizontalMargin = 0,
+
   });
 
   /// Текст ошибки ([Failure.displayMessage]).
@@ -34,15 +34,14 @@ class TErrorBannerWidget extends StatelessWidget {
   /// Скрыть баннер: хост → `errorBannerProvider.notifier.dismiss()`.
   final VoidCallback onClose;
 
-  final double leftMargin;
-  final double rightMargin;
+  final double horizontalMargin;
 
   @override
   Widget build(BuildContext context) {
     return _ErrorBannerShell(
       onClose: onClose,
-      leftMargin: leftMargin,
-      rightMargin: rightMargin,
+      leftMargin: horizontalMargin,
+      rightMargin: horizontalMargin,
       child: _ErrorBannerCard(
         message: message,
         onClose: onClose,

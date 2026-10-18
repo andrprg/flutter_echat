@@ -18,15 +18,8 @@ Widget buildTErrorBannerInteractive(BuildContext context) {
 
   return _ErrorBannerPreview(
     message: failure.displayMessage,
-    leftMargin: context.knobs.double.slider(
-      label: 'leftMargin',
-      initialValue: 0,
-      min: 0,
-      max: 48,
-      divisions: 12,
-    ),
-    rightMargin: context.knobs.double.slider(
-      label: 'rightMargin',
+    horizontalMargin: context.knobs.double.slider(
+      label: 'horizontalMargin',
       initialValue: 0,
       min: 0,
       max: 48,
@@ -46,8 +39,7 @@ Widget buildTErrorBannerNetwork(BuildContext context) {
 Widget buildTErrorBannerAuth(BuildContext context) {
   return _ErrorBannerPreview(
     message: const Failure.auth(AuthFailureReason.wrongPassword).displayMessage,
-    leftMargin: 16,
-    rightMargin: 16,
+    horizontalMargin: 16,
   );
 }
 
@@ -64,8 +56,7 @@ Widget buildTErrorBannerLongMessage(BuildContext context) {
     message:
         'Не удалось отправить сообщение: нет соединения с сетью. '
         'Проверьте Wi‑Fi или мобильный интернет и повторите попытку.',
-    leftMargin: 16,
-    rightMargin: 16,
+    horizontalMargin: 16,
   );
 }
 
@@ -73,13 +64,11 @@ Widget buildTErrorBannerLongMessage(BuildContext context) {
 class _ErrorBannerPreview extends StatefulWidget {
   const _ErrorBannerPreview({
     required this.message,
-    this.leftMargin = 0,
-    this.rightMargin = 0,
+    this.horizontalMargin = 0,
   });
 
   final String message;
-  final double leftMargin;
-  final double rightMargin;
+  final double horizontalMargin;
 
   @override
   State<_ErrorBannerPreview> createState() => _ErrorBannerPreviewState();
@@ -109,8 +98,7 @@ class _ErrorBannerPreviewState extends State<_ErrorBannerPreview> {
       child: TErrorBannerWidget(
         key: _bannerKey,
         message: widget.message,
-        leftMargin: widget.leftMargin,
-        rightMargin: widget.rightMargin,
+        horizontalMargin: widget.horizontalMargin,
         onClose: () => setState(() => _visible = false),
       ),
     );
