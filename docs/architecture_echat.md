@@ -19,7 +19,7 @@
 1. [Принципы](#1-принципы)
 2. [Слои](#2-слои)
 3. [Умный / глупый компонент](#3-умный--глупый-компонент)
-4. [Адаптивный UI (phone / tablet / desktop)](#4-адаптивный-ui-phone--tablet--desktop)
+4. [Адаптивный UI (phone / tablet / desktop)](#4-адаптивный-ui-phone--tablet--desktop) ([роутинг](#410-как-должен-работать-роутинг-go_router), [bottom bar](#49-как-подключается-bottom-navigation-bar))
 5. [Структура каталогов](#5-структура-каталогов)
 6. [Riverpod 3](#6-riverpod-3)
 7. [Freezed](#7-freezed)
@@ -672,46 +672,443 @@ flowchart LR
 
 **Резюме:** `chat_list_view` и `chat_thread_view` — переиспользуемые dumb из разных папок; на phone их показывают отдельные smart-screen или один child shell; на desktop **не** мержат фичи — `ChatsShellScreen` кладёт оба view в `TwoPane` и оставляет два независимых Notifier’а.
 
-### 4.9. Где находится вёрстка Bottom Navigation Bar
+### 4.9. Как подключается Bottom Navigation Bar
 
-Bottom Navigation Bar — это **dumb-компонент**, который по архитектуре живёт в `src/shared/widgets/`, потому что это переиспользуемый виджет уровня приложения (не фичи).
+Bottom bar — это **не** часть фичи Chats и **не** отдельный router. Это chrome оболочки вкладок: тема задаёт цвета, `go_router` держит 4 ветки, smart `NavShell` решает bar vs rail и кладёт бар в `Scaffold.bottomNavigationBar`, dumb `TBottomNavBar` только рисует пункты.
 
-#### Вёрстка самого бара
+Полная настройка `GoRouter` — [§4.10](#410-как-должен-работать-роутинг-go_router). Учебный разбор API — [learn/go-router-material-app.md](../learn/go-router-material-app.md).
+
+#### Роли файлов
+
+| Слой | Файл | Делает | Не делает |
+| --- | --- | --- | --- |
+| Тема | `utils/theme/widget_themes/bottom_navigator_bar_theme.dart` | `BottomNavigationBarThemeData` light/dark | не знает маршруты |
+| Тема (сборка) | `utils/theme/theme.dart` → `TAppTheme` | прокидывает тему в `ThemeData.bottomNavigationBarTheme` | не монтирует виджет бара |
+| Конфиг маршрутов | `utils/router/app_router.dart` | `StatefulShellRoute.indexedStack` + 4 ветки | не рисует bar/rail |
+| Smart chrome | `utils/router/nav_shell.dart` | breakpoint → bar или rail; `goBranch` | тяжёлая вёрстка items |
+| Dumb bar | `shared/widgets/t_bottom_nav_bar.dart` | `BottomNavigationBar` по props | Riverpod, `go_router`, `MediaQuery` |
+| Контент вкладок | `features/*/presentation/...` | экраны внутри веток | не содержит `bottomNavigationBar:` |
+
+Auth / onboarding (`/login`, `/register`, `/signup/profile`) **вне** shell — у них нет bottom bar. Глобальный баннер ошибок тоже не в `nav_shell` (§10.5): auth-экраны живут вне вкладок.
+
+#### Цепочка подключения (сверху вниз)
 
 ```
-lib/src/shared/widgets/t_bottom_nav_bar.dart # DUMB TBottomNavBar: 4 вкладки Chats|Groups|Profile|More (phone)
+EChatApp
+  theme: TAppTheme.bottomNavigationBarTheme   ← цвета selected / unselected / background
+  routerConfig: GoRouter
+       └─ StatefulShellRoute.indexedStack
+            builder: (context, state, navigationShell) => NavShell(navigationShell)
+            branches[0..3]: /chats | /groups | /profile | /more
+                 │
+                 ▼
+            NavShell (smart, ConsumerWidget)
+              ref.watch(appBreakpointProvider)
+              index = navigationShell.currentIndex
+              │
+              ├─ phone:
+              │    Scaffold(
+              │      body: navigationShell,              ← контент активной ветки
+              │      bottomNavigationBar: TBottomNavBar( ← здесь подключается бар
+              │        currentIndex: index,
+              │        onDestinationSelected: (i) => navigationShell.goBranch(...),
+              │      ),
+              │    )
+              │
+              └─ tablet / desktop:
+                   Scaffold(
+                     body: Row(
+                       TNavigationRail(...),             ← bar не монтируется
+                       Expanded(child: navigationShell),
+                     ),
+                   )
 ```
 
-Файл добавлен в структуру каталогов в [§5](#5-структура-каталогов). Это глупый виджет: без Riverpod, без `ref`, без `MediaQuery`. Он получает от smart-shell данные через props (выбранную вкладку + `onDestinationSelected`) и просто рисует `BottomNavigationBar` — тело бара и пункты вкладок.
+Ключевой момент: слот Flutter — **`Scaffold.bottomNavigationBar`**. Бар появляется только когда `NavShell` на phone возвращает `Scaffold` с этим параметром. На wide тот же `NavShell` отдаёт другую раскладку без `bottomNavigationBar`.
 
-#### Кто выбирает, что показывать (smart-слой)
+#### 1. Тема (визуал без логики)
 
-Сама вёрстка бара — dumb, но **решение, когда показывать bar или rail**, принимает умный shell:
+`TBottomNavigatorBarTheme` задаёт фон, selected/unselected, `type: fixed`, elevation. `TAppTheme.lightTheme` / `darkTheme` подключают её в `ThemeData.bottomNavigationBarTheme`.
+
+Dumb-бар **не** хардкодит цвета Figma — берёт из `Theme.of(context)`. Смена light/dark не требует правок в `TBottomNavBar`.
+
+#### 2. Router отдаёт shell, не бар
+
+В `app_router.dart` authenticated-зона — один `StatefulShellRoute.indexedStack`. Его `builder` **обязан** обернуть контент в `NavShell` и передать `StatefulNavigationShell`:
+
+```dart
+StatefulShellRoute.indexedStack(
+  builder: (context, state, navigationShell) {
+    return NavShell(navigationShell: navigationShell);
+  },
+  branches: [
+    StatefulShellBranch(routes: [/* /chats, /chats/:id */]),
+    StatefulShellBranch(routes: [/* /groups, /groups/:id */]),
+    StatefulShellBranch(routes: [/* /profile */]),
+    StatefulShellBranch(routes: [/* /more */]),
+  ],
+)
+```
+
+Индекс вкладки = индекс ветки: `0` Chats, `1` Groups, `2` Profile, `3` More. Порядок `branches` и порядок items в `TBottomNavBar` **должны совпадать**.
+
+`navigationShell` — одновременно виджет (тело вкладки) и контроллер (`currentIndex`, `goBranch`).
+
+#### 3. Smart `NavShell`: куда именно кладётся бар
+
+```dart
+// utils/router/nav_shell.dart — целевой каркас
+class NavShell extends ConsumerWidget {
+  const NavShell({super.key, required this.navigationShell});
+
+  final StatefulNavigationShell navigationShell;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final bp = ref.watch(appBreakpointProvider);
+    final index = navigationShell.currentIndex;
+
+    void onSelect(int i) {
+      navigationShell.goBranch(
+        i,
+        // повторный тап по активной вкладке → сброс стека ветки к корню
+        initialLocation: i == index,
+      );
+    }
+
+    if (bp == AppBreakpoint.phone) {
+      return Scaffold(
+        body: navigationShell,
+        bottomNavigationBar: TBottomNavBar(
+          currentIndex: index,
+          onDestinationSelected: onSelect,
+        ),
+      );
+    }
+
+    return Scaffold(
+      body: Row(
+        children: [
+          TNavigationRail(
+            currentIndex: index,
+            onDestinationSelected: onSelect,
+          ),
+          Expanded(child: navigationShell),
+        ],
+      ),
+    );
+  }
+}
+```
+
+| Ситуация | Поведение |
+| --- | --- |
+| Тап другой вкладки | `goBranch(i)` — стек предыдущей вкладки **сохраняется** (`indexedStack`) |
+| Повторный тап той же | `goBranch(i, initialLocation: true)` — например с `/chats/42` обратно на `/chats` |
+| Открытие чата | **не** через bar; smart фичи делает `context.go('/chats/$id')` внутри ветки |
+| Resize phone → tablet | тот же shell: bar размонтируется, появляется rail; location не меняется |
+
+#### Как `TNavigationRail` оказывается сбоку экрана
+
+На wide `NavShell` **не** возвращает один rail. Он возвращает весь экран: `Scaffold` → `body: Row` → rail слева + контент справа.
+
+`StatefulNavigationShell` сам rail не позиционирует — он только **контент активной ветки**. Положение «слева» задаёт порядок детей в `Row`:
+
+| Child в `Row` | Ширина | Что на экране |
+| --- | --- | --- |
+| `TNavigationRail` | фиксированная (~72 dp icon-only / ~240 с подписями) | логотип, иконки вкладок, опционально аватар снизу |
+| `Expanded(child: navigationShell)` | вся оставшаяся ширина | контент ветки (список, thread, profile…) |
+
+Высота на весь экран: `Scaffold.body` занимает доступную область; `Row` растягивает детей по вертикали (`crossAxisAlignment: CrossAxisAlignment.stretch` при необходимости), rail рисуется на полную высоту.
+
+Phone vs wide — одна идея, разные слоты:
+
+| Breakpoint | Куда chrome | Куда `navigationShell` |
+| --- | --- | --- |
+| phone | `Scaffold.bottomNavigationBar: TBottomNavBar` | `body` |
+| tablet / desktop | первый child `Row` | второй child `Expanded` |
+
+На wide внутри `navigationShell` фича может добавить ещё колонки (master–detail). Типичный экран Chats — **три** вертикальные полосы:
 
 ```
-lib/src/utils/router/nav_shell.dart       # SMART UI: BottomNavBar (Phone) / NavigationRail (Wide)
-lib/src/utils/router/app_router.dart      # CONFIG: GoRouter tree & Auth Guards
+Row                                          ← NavShell (chrome приложения)
+├─ TNavigationRail                           ← 1: вкладки Chats|Groups|Profile|More
+└─ Expanded
+   └─ navigationShell → ChatsShellScreen
+        └─ TwoPane                           ← уже фича chats (§4.3)
+             ├─ список диалогов              ← 2
+             └─ thread / empty               ← 3
 ```
 
-Здесь читается `appBreakpointProvider` (в `nav_shell.dart`, см. §4.1):
+Rail остаётся chrome приложения; list + thread — композиция `ChatsShellScreen`, не `NavShell`. См. также [layouts-tablet-desktop.md](./layouts-tablet-desktop.md) §3.
 
-- `phone` → dumb `TBottomNavBar` из `src/shared/widgets/t_bottom_nav_bar.dart`;
-- `tablet` / `desktop` → dumb `TNavigationRail` (в том же `shared/widgets/`).
+#### 4. Dumb `TBottomNavBar`
 
-*Совет на будущее:* Если проект сильно разрастётся, маршруты фич (из `app_router.dart`) можно будет разбить на отдельные файлы (например, `chats_routes.dart`), чтобы `app_router.dart` собирал их как модули. Также можно использовать библиотеку `go_router_builder` для кодогенерации типизированных маршрутов.
+```
+lib/src/shared/widgets/t_bottom_nav_bar.dart
+```
 
-#### Схема
+| Prop | Тип | Откуда берёт smart |
+| --- | --- | --- |
+| `currentIndex` | `int` | `navigationShell.currentIndex` |
+| `onDestinationSelected` | `ValueChanged<int>` | замыкание на `goBranch` |
+
+Внутри — Material `BottomNavigationBar` (или `NavigationBar`) с четырьмя destinations: Chats · Groups · Profile · More. Без импорта `go_router` / Riverpod. Тексты и иконки — константы виджета или tokens; path’ы (`/groups`) dumb **не** знает.
+
+#### Поток события «пользователь нажал Groups»
 
 ```mermaid
-flowchart LR
-    BP[appBreakpointProvider] --> NS[nav_shell.dart Smart]
-    NS -->|phone| BBN[t_bottom_nav_bar.dart TBottomNavBar]
-    NS -->|tablet desktop| NR[NavigationRail Dumb]
-    BBN -->|StatefulShellRoute| Tabs[Chats Groups Profile More]
-    NR --> Tabs
+sequenceDiagram
+  participant U as Пользователь
+  participant Bar as TBottomNavBar Dumb
+  participant NS as NavShell Smart
+  participant Shell as StatefulNavigationShell
+  participant GR as GoRouter
+
+  U->>Bar: тап index=1
+  Bar->>NS: onDestinationSelected(1)
+  NS->>Shell: goBranch(1)
+  Shell->>GR: location → /groups
+  GR-->>NS: currentIndex=1, body=Groups ветка
+  NS-->>Bar: currentIndex=1 (selected)
 ```
 
-**Резюме:** вёрстка Bottom Navigation Bar находится в dumb-виджете `TBottomNavBar` (`src/shared/widgets/t_bottom_nav_bar.dart`) — там тело бара и пункты вкладок; а умная логика выбора между bar и rail — в `utils/router/nav_shell.dart`. Дерево маршрутов и Auth Guards лежат отдельно в `utils/router/app_router.dart`. Так соблюдается правило «Smart выбирает раскладку, Dumb её рисует» (§3.1).
+#### Почему бар нельзя класть в feature-screen
+
+| Анти-паттерн | Почему ломается |
+| --- | --- |
+| `bottomNavigationBar` в `ChatListScreen` | На `/login` бара нет; на `/chats/:id` bar дублируется или пропадает; wide не нужен bar |
+| `context.go('/groups')` внутри dumb-бара | dumb знает path; хуже контроль «повторный тап → корень» |
+| Отдельный bar «для tablet» | нарушает §4.2: один shell, chrome выбирается breakpoint’ом |
+| Цвета в виджете вместо темы | light/dark и Figma-токены разъезжаются |
+
+#### Схема компонентов
+
+```mermaid
+flowchart TB
+  Theme[TAppTheme.bottomNavigationBarTheme] --> App[EChatApp]
+  App --> GR[GoRouter]
+  GR --> SSR[StatefulShellRoute.indexedStack]
+  SSR --> NS[NavShell Smart]
+  SSR --> B0["branch0 /chats"]
+  SSR --> B1["branch1 /groups"]
+  SSR --> B2["branch2 /profile"]
+  SSR --> B3["branch3 /more"]
+  BP[appBreakpointProvider] --> NS
+  NS -->|phone bottomNavigationBar| Bar[TBottomNavBar]
+  NS -->|wide| Rail[TNavigationRail]
+  Bar -->|onDestinationSelected| GB[goBranch]
+  Rail --> GB
+  GB --> SSR
+```
+
+**Резюме §4.9:** тема → `GoRouter` / `StatefulShellRoute` → smart `NavShell`: на phone — `Scaffold(bottomNavigationBar: TBottomNavBar)`; на wide — `Row(TNavigationRail, Expanded(navigationShell))` → тап → `goBranch`. Бар/rail живут в `shared/widgets/`; раскладка chrome и связь с ветками — только в `utils/router/nav_shell.dart`.
+
+---
+
+### 4.10. Как должен работать роутинг (go_router)
+
+Единственный пакет навигации — **`go_router`**. Не `auto_route`, не ручной `Navigator` 2.0 / `onGenerateRoute` для feature-экранов. Правило: `.cursor/rules/go-router.mdc`.
+
+Идея: **location (URL) — источник правды**. UI (в т.ч. bar и master–detail) подстраивается под `/chats/42`; не наоборот. Один path работает на phone (stack) и desktop (split) — меняется композиция shell (§4.3), не дерево маршрутов.
+
+#### Файлы каркаса
+
+| Файл | Ответственность |
+| --- | --- |
+| `utils/providers/app_router_provider.dart` *или* notifier в `app_router.dart` | `@Riverpod(keepAlive: true)` создаёт / держит `GoRouter` |
+| `utils/router/app_router.dart` | дерево `GoRoute` / `StatefulShellRoute`, `redirect`, enum path’ов |
+| `utils/router/nav_shell.dart` | SMART chrome вкладок ([§4.9](#49-как-подключается-bottom-navigation-bar)) |
+| `src/app.dart` | `MaterialApp.router(routerConfig: …)` + тема + баннер (§10.5) |
+
+Один `GoRouter` на phone / tablet / desktop. Отдельных деревьев «для tablet» нет.
+
+#### Шаг 1. `MaterialApp.router`
+
+```dart
+// src/app.dart — целевой каркас
+class EChatApp extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final router = ref.watch(appRouterProvider);
+
+    return MaterialApp.router(
+      theme: TAppTheme.lightTheme,
+      darkTheme: TAppTheme.darkTheme,
+      themeMode: ThemeMode.system,
+      routerConfig: router,
+      builder: (context, child) {
+        // Stack: navigator + TErrorBannerWidget (§10.5)
+        return /* … */;
+      },
+    );
+  }
+}
+```
+
+После перехода **не** использовать `home` / `routes` / `onGenerateRoute` для фич. Диалоги и bottom sheet — по-прежнему `showModalBottomSheet` / `showDialog` (локальный overlay, не feature-route).
+
+#### Шаг 2. Провайдер `GoRouter`
+
+`keepAlive: true` — роутер не dispose при смене экрана.
+
+```dart
+@Riverpod(keepAlive: true)
+GoRouter appRouter(Ref ref) {
+  return GoRouter(
+    initialLocation: '/chats',
+    redirect: (context, state) => authRedirect(/* session */, state),
+    routes: appRoutes,
+  );
+}
+```
+
+Альтернатива (как в черновике кода): `@Riverpod(keepAlive: true) class AppRouter extends _$AppRouter` с `GoRouter build()`. Суть та же — один keepAlive-экземпляр на приложение.
+
+Чтобы `redirect` реагировал на login/logout без смены location вручную:
+
+- `refreshListenable` на stream auth, или
+- `ref.listen(currentUserProvider, …)` → `router.refresh()`.
+
+#### Шаг 3. Дерево маршрутов
+
+Логическая карта (согласована с `AppRoute` в коде):
+
+```
+Вне shell (без bottom bar / rail):
+  /login
+  /register
+  /signup/profile
+
+StatefulShellRoute.indexedStack  ← authenticated chrome (NavShell)
+  branch 0  /chats
+            /chats/:id
+  branch 1  /groups
+            /groups/:id
+  branch 2  /profile
+  branch 3  /more
+```
+
+Почему auth снаружи: Login не должен показывать вкладки Chats | Groups | Profile | More. Shell — рамка **уже вошедшего** пользователя.
+
+```dart
+// utils/router/app_router.dart — целевой каркас веток
+final List<RouteBase> appRoutes = [
+  GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
+  GoRoute(path: '/register', builder: (_, __) => const RegisterScreen()),
+  GoRoute(path: '/signup/profile', builder: (_, __) => const UserInfoScreen()),
+  StatefulShellRoute.indexedStack(
+    builder: (context, state, navigationShell) =>
+        NavShell(navigationShell: navigationShell),
+    branches: [
+      StatefulShellBranch(routes: [
+        GoRoute(
+          path: '/chats',
+          builder: (_, __) => const ChatsShellScreen(),
+          routes: [
+            GoRoute(
+              path: ':id',
+              builder: (_, state) => ChatsShellScreen(
+                selectedChatId: state.pathParameters['id'],
+              ),
+            ),
+          ],
+        ),
+      ]),
+      // /groups (+ :id), /profile, /more — по тому же шаблону
+    ],
+  ),
+];
+```
+
+`ChatsShellScreen` на phone показывает list **или** thread; на tablet/desktop — `TwoPane` ([§4.3](#43-masterdetail-chats--groups)). Path один.
+
+`StatefulShellRoute.indexedStack` сохраняет состояние вкладок: ушёл в Groups и вернулся в Chats — список и скролл на месте.
+
+#### Шаг 4. Auth guard (`redirect`)
+
+```dart
+String? authRedirect(/* current user + profile */, GoRouterState state) {
+  final loc = state.matchedLocation;
+  final loggingIn = loc == '/login' || loc == '/register';
+  final onboarding = loc == '/signup/profile';
+  final signedIn = /* user != null */;
+  final hasProfile = /* профиль в Firestore есть */;
+
+  if (!signedIn && !loggingIn) return '/login';
+  if (signedIn && !hasProfile && !onboarding) return '/signup/profile';
+  if (signedIn && hasProfile && (loggingIn || onboarding)) return '/chats';
+  return null; // продолжить запрошенный location
+}
+```
+
+Источник сессии: `FirebaseAuth.authStateChanges()` → `currentUserProvider`. Подробности — [firebase-registration.md §9](./firebase-registration.md#9-auth-guard-go_router). Пока Auth не готов — `redirect` может всегда возвращать `null`.
+
+#### Шаг 5. API навигации (кто и чем ходит)
+
+| Действие | API | Кто вызывает |
+| --- | --- | --- |
+| Открыть чат / сменить location в ветке | `context.go('/chats/$id')` или `ref.read(appRouterProvider).go(...)` | smart-screen / shell фичи |
+| Положить экран поверх (редко) | `context.push('/…')` | smart |
+| Сменить вкладку | `navigationShell.goBranch(i)` | только `NavShell` (из callback бара/rail) |
+| Назад после `push` | `context.pop()` | smart |
+| Системный диалог | `showDialog` / `showModalBottomSheet` | smart; не через `GoRoute` без нужды |
+
+**Dumb** (`*_view.dart`, `TBottomNavBar`) роутер не вызывает — только callbacks (`onChatTap`, `onDestinationSelected`).
+
+Разница `goBranch` vs `go('/groups')` для вкладок: `goBranch` явно переключает ветку shell и умеет `initialLocation` (сброс стека). Для тапа по bar/rail в проекте — **только** `goBranch`.
+
+#### Deep links и параметры
+
+- `/chats/:id` → `state.pathParameters['id']`
+- при необходимости query: `state.uri.queryParameters`
+- deep link с холодного старта проходит тот же `redirect` и то же дерево
+
+#### Сквозной сценарий
+
+1. Пользователь не авторизован открывает приложение → `redirect` → `/login` (бара нет).
+2. Успешный login → `go('/chats')` или redirect на `/chats` → `NavShell` + bar (phone).
+3. Тап Groups на bar → `goBranch(1)` → location `/groups`, bar подсвечивает index 1, стек Chats сохранён.
+4. Тап чата в списке → smart `go('/chats/$id')` → на phone полный thread; на desktop split; bar остаётся (мы всё ещё в shell).
+5. Logout → redirect `/login` → shell и bar размонтируются.
+
+```mermaid
+flowchart TB
+  Pub[go_router в pubspec] --> Prov[appRouterProvider keepAlive]
+  Prov --> GR[GoRouter]
+  GR --> Redir[redirect]
+  GR --> Routes[appRoutes]
+  Routes --> Auth["/login /register /signup/profile"]
+  Routes --> SSR[StatefulShellRoute]
+  SSR --> NS[NavShell]
+  NS -->|phone| Bar[TBottomNavBar §4.9]
+  App[EChatApp MaterialApp.router] --> Prov
+  Smart[Feature smart] -->|go / push| GR
+  NS -->|goBranch| SSR
+```
+
+#### Порядок внедрения (roadmap §0.4)
+
+1. Провайдер + заготовка `GoRouter` / `appRoutes` (path’ы и ветки).
+2. `EChatApp` → `MaterialApp.router`.
+3. `NavShell` + `StatefulShellRoute` (сначала можно без bar: `Scaffold(body: navigationShell)`).
+4. Phone: `TBottomNavBar` + `goBranch` ([§4.9](#49-как-подключается-bottom-navigation-bar)).
+5. Wide: `TNavigationRail` / sidebar.
+6. `redirect` + `currentUserProvider` (фаза Auth).
+7. Master–detail builders для `/chats/:id`, `/groups/:id`.
+
+#### DO / DON'T
+
+| DO | DON'T |
+| --- | --- |
+| Один `GoRouter` + `MaterialApp.router` | `home` / `onGenerateRoute` / второй router «для desktop» |
+| Auth-маршруты вне `StatefulShellRoute` | Login внутри shell с bottom bar |
+| Вкладки через `goBranch` | `Navigator.push` для смены вкладки |
+| Навигация из smart | `go_router` / `ref` в dumb |
+| Общие path на всех ширинах | Копии маршрутов `/tablet/chats` |
+| Guards в `redirect` | Только проверки auth размазанные по screen’ам без центрального guard |
+
+**Резюме §4.10:** `appRouterProvider` создаёт `GoRouter` → `EChatApp` отдаёт его в `routerConfig` → auth снаружи shell, четыре вкладки внутри `StatefulShellRoute` → chrome (bar/rail) рисует `NavShell`, контент — feature smart по одним path. Подключение бара — [§4.9](#49-как-подключается-bottom-navigation-bar); теория API — [learn/go-router-material-app.md](../learn/go-router-material-app.md).
 
 ---
 
@@ -745,11 +1142,12 @@ lib/
     │   │       ├── text_field_theme.dart
     │   │       └── text_theme.dart
     │   ├── validators/              # валидаторы
-    │   ├── router/                  # go_router
-    │   │   ├── app_router.dart      # CONFIG: GoRouter tree & Auth Guards
+    │   ├── router/                  # go_router — см. §4.9, §4.10
+    │   │   ├── app_router.dart      # CONFIG: GoRouter tree, AppRoute, Auth Guards
     │   │   └── nav_shell.dart       # SMART UI: BottomNavBar (Phone) / NavigationRail (Wide)
     │   └── providers/               # общие Riverpod-провайдеры
     │       ├── app_breakpoint_provider.dart  # appBreakpointProvider + ResponsiveBuilder
+    │       ├── app_router_provider.dart      # keepAlive GoRouter (или notifier в app_router.dart)
     │       └── error_banner_provider.dart    # keepAlive ErrorBannerState? — глобальный баннер ошибки
     │
     ├── shared/
@@ -1657,12 +2055,14 @@ testWidgets('ChatListView shows empty state', (tester) async {
 - Breakpoints только через `appBreakpointProvider` / `utils/constants/breakpoints.dart` + `utils/providers/`.
 - Выбор layout в smart: `ResponsiveBuilder` или `switch` по `AppBreakpoint` (§4.1.1).
 - Master–detail (chats/groups): smart-shell компонует dumb из разных подпапок; общие маршруты `/…` и `/…/:id` (§4.3).
+- Роутинг: `MaterialApp.router` + один `GoRouter`; вкладки — `StatefulShellRoute` + `goBranch`; bar только в `NavShell` (§4.9, §4.10).
 - Ошибка действия — глобальный баннер: `errorBannerProvider.show(failure: failure)` + `TErrorBannerWidget` в `MaterialApp.builder` (§10.5).
 - Ошибка загрузки экрана — `ErrorView` с `Failure.displayMessage` и `onRetry`.
 
 ### DON'T
 
 - `FirebaseFirestore.instance` в виджетах.
+- `auto_route` / `Navigator.push` для feature-маршрутов; `bottomNavigationBar` внутри feature-screen вместо `NavShell`.
 - `ref.watch` / `WidgetRef` в dumb (`*_view.dart`, shared widgets).
 - Кастомные виджеты без префикса `T` / файла `t_` (`ChatButton`, `EChatButton` — только `TChatButton`).
 - Отдельные Notifier или feature-копии «для tablet» / «для desktop».
@@ -1736,14 +2136,17 @@ flowchart TB
 
 ## Связанные документы
 
-- [roadmap.md](./roadmap.md) — фазы, включая adaptive UI
+- [roadmap.md](./roadmap.md) — фазы, включая adaptive UI и навигацию (§0.4)
+- [../learn/go-router-material-app.md](../learn/go-router-material-app.md) — теория MaterialApp.router + GoRouter
+- [layouts-tablet-desktop.md](./layouts-tablet-desktop.md) — chrome bar/rail на wide
 - [widgetbook.md](./widgetbook.md) — песочница dumb-виджетов: запуск и обновление
 - [shared-widgets.md](./shared-widgets.md) — каталог переиспользуемых UI-компонентов
 - [firebase-database.md](./firebase-database.md) — модели Firestore для DTO/Entity
 - [firebase-setup.md](./firebase-setup.md) — Auth, rules, Functions
-- [firebase-registration.md](./firebase-registration.md) — Sign Up: Email/Password, профиль, guard
+- [firebase-registration.md](./firebase-registration.md) — Sign Up: Email/Password, профиль, Auth guard (§9)
 - [firebase-flutter-connect.md](./firebase-flutter-connect.md) — инициализация Firebase в `main.dart`
 - [firebase-events.md](./firebase-events.md) — Console, логи Functions, `snapshots()`, Analytics
+- [go_router](https://pub.dev/packages/go_router)
 - [Riverpod 3 docs](https://riverpod.dev/)
 - [Freezed](https://pub.dev/packages/freezed)
 - [fpdart](https://pub.dev/packages/fpdart)
