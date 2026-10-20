@@ -268,7 +268,7 @@ class RegisterScreen extends ConsumerWidget {
 
 | Имя | Ширина (logical px) | Типичная оболочка |
 | --- | --- | --- |
-| `phone` | `< 600` | Bottom NavigationBar |
+| `phone` | `< 600` | `TBottomNavBar` (кастомный bottom bar) |
 | `tablet` | `600 … 1023` | NavigationRail + опционально master–detail |
 | `desktop` | `≥ 1024` | NavigationRail / Sidebar + master–detail + secondary pane |
 
@@ -674,7 +674,9 @@ flowchart LR
 
 ### 4.9. Как подключается Bottom Navigation Bar
 
-Bottom bar — это **не** часть фичи Chats и **не** отдельный router. Это chrome оболочки вкладок: тема задаёт цвета, `go_router` держит 4 ветки, smart `NavShell` решает bar vs rail и кладёт бар в `Scaffold.bottomNavigationBar`, dumb `TBottomNavBar` только рисует пункты.
+Bottom bar — это **не** часть фичи Chats и **не** отдельный router. Это chrome оболочки вкладок: тема задаёт токены (через `ThemeExtension`), `go_router` держит 4 ветки, smart `NavShell` решает bar vs rail и кладёт бар в `Scaffold.bottomNavigationBar`, dumb `TBottomNavBar` только рисует пункты.
+
+Бар **не** Material `BottomNavigationBar` / M3 `NavigationBar`: в Figma активная вкладка — плитка ~76×70 с градиентом (`gradientLightBlue`), поэтому layout кастомный. Токены — `TBottomNavigatorBarTheme` в `ThemeData.extensions`.
 
 Полная настройка `GoRouter` — [§4.10](#410-как-должен-работать-роутинг-go_router). Учебный разбор API — [learn/go-router-material-app.md](../learn/go-router-material-app.md).
 
@@ -682,11 +684,11 @@ Bottom bar — это **не** часть фичи Chats и **не** отдел�
 
 | Слой | Файл | Делает | Не делает |
 | --- | --- | --- | --- |
-| Тема | `utils/theme/widget_themes/bottom_navigator_bar_theme.dart` | `BottomNavigationBarThemeData` light/dark | не знает маршруты |
-| Тема (сборка) | `utils/theme/theme.dart` → `TAppTheme` | прокидывает тему в `ThemeData.bottomNavigationBarTheme` | не монтирует виджет бара |
+| Тема | `utils/theme/widget_themes/bottom_navigator_bar_theme.dart` | `TBottomNavigatorBarTheme` (light/dark) — `ThemeExtension` | не знает маршруты |
+| Тема (сборка) | `utils/theme/theme.dart` → `TAppTheme` | кладёт extension в `ThemeData.extensions` | не монтирует виджет бара |
 | Конфиг маршрутов | `utils/router/app_router.dart` | `StatefulShellRoute.indexedStack` + 4 ветки | не рисует bar/rail |
 | Smart chrome | `utils/router/nav_shell.dart` | breakpoint → bar или rail; `goBranch` | тяжёлая вёрстка items |
-| Dumb bar | `shared/widgets/t_bottom_nav_bar.dart` | `BottomNavigationBar` по props | Riverpod, `go_router`, `MediaQuery` |
+| Dumb bar | `shared/widgets/t_bottom_nav_bar.dart` | кастомный bar по props + токены темы | Riverpod, `go_router`, `MediaQuery` |
 | Контент вкладок | `features/*/presentation/...` | экраны внутри веток | не содержит `bottomNavigationBar:` |
 
 Auth / onboarding (`/login`, `/register`, `/signup/profile`) **вне** shell — у них нет bottom bar. Глобальный баннер ошибок тоже не в `nav_shell` (§10.5): auth-экраны живут вне вкладок.
@@ -695,7 +697,7 @@ Auth / onboarding (`/login`, `/register`, `/signup/profile`) **вне** shell �
 
 ```
 EChatApp
-  theme: TAppTheme.bottomNavigationBarTheme   ← цвета selected / unselected / background
+  theme: TAppTheme.…  ThemeData.extensions ← TBottomNavigatorBarTheme
   routerConfig: GoRouter
        └─ StatefulShellRoute.indexedStack
             builder: (context, state, navigationShell) => NavShell(navigationShell)
@@ -728,9 +730,9 @@ EChatApp
 
 #### 1. Тема (визуал без логики)
 
-`TBottomNavigatorBarTheme` задаёт фон, selected/unselected, `type: fixed`, elevation. `TAppTheme.lightTheme` / `darkTheme` подключают её в `ThemeData.bottomNavigationBarTheme`.
+`TBottomNavigatorBarTheme` — `ThemeExtension`: фон, inactive / selected foreground, `selectedGradient`, высота бара, radius, тень, размеры плитки (76×70), стиль лейбла. `TAppTheme.lightTheme` / `darkTheme` регистрируют `TBottomNavigatorBarTheme.light` / `.dark` в `ThemeData.extensions`.
 
-Dumb-бар **не** хардкодит цвета Figma — берёт из `Theme.of(context)`. Смена light/dark не требует правок в `TBottomNavBar`.
+Dumb-бар **не** хардкодит цвета Figma — читает через `TBottomNavigatorBarTheme.of(context)`. Смена light/dark не требует правок в `TBottomNavBar`. M3 `NavigationBarThemeData` / `ThemeData.navigationBarTheme` для этого бара **не** используются (градиентная плитка туда не укладывается).
 
 #### 2. Router отдаёт shell, не бар
 
@@ -853,7 +855,7 @@ lib/src/shared/widgets/t_bottom_nav_bar.dart
 | `currentIndex` | `int` | `navigationShell.currentIndex` |
 | `onDestinationSelected` | `ValueChanged<int>` | замыкание на `goBranch` |
 
-Внутри — Material `BottomNavigationBar` (или `NavigationBar`) с четырьмя destinations: Chats · Groups · Profile · More. Без импорта `go_router` / Riverpod. Тексты и иконки — константы виджета или tokens; path’ы (`/groups`) dumb **не** знает.
+Внутри — кастомный layout (Figma Navbar): `Row` из четырёх пунктов Чаты · Группы · Профиль · Ещё. Inactive — outline SVG + лейбл; active — плитка с `selectedGradient` и bold SVG (`applyColorFilter: false`). Токены — `TBottomNavigatorBarTheme.of`. Без импорта `go_router` / Riverpod. Лейблы и имена иконок — константы виджета; path’ы (`/groups`) dumb **не** знает. Порядок пунктов **обязан** совпадать с `branches` shell (`0…3`).
 
 #### Поток события «пользователь нажал Groups»
 
@@ -880,13 +882,14 @@ sequenceDiagram
 | `bottomNavigationBar` в `ChatListScreen` | На `/login` бара нет; на `/chats/:id` bar дублируется или пропадает; wide не нужен bar |
 | `context.go('/groups')` внутри dumb-бара | dumb знает path; хуже контроль «повторный тап → корень» |
 | Отдельный bar «для tablet» | нарушает §4.2: один shell, chrome выбирается breakpoint’ом |
-| Цвета в виджете вместо темы | light/dark и Figma-токены разъезжаются |
+| Цвета / градиент в виджете вместо `TBottomNavigatorBarTheme` | light/dark и Figma-токены разъезжаются |
+| M3 `NavigationBar` «как проще» | нельзя отрисовать градиентную плитку 76×70 из макета |
 
 #### Схема компонентов
 
 ```mermaid
 flowchart TB
-  Theme[TAppTheme.bottomNavigationBarTheme] --> App[EChatApp]
+  Theme["TAppTheme.extensions → TBottomNavigatorBarTheme"] --> App[EChatApp]
   App --> GR[GoRouter]
   GR --> SSR[StatefulShellRoute.indexedStack]
   SSR --> NS[NavShell Smart]
@@ -902,7 +905,7 @@ flowchart TB
   GB --> SSR
 ```
 
-**Резюме §4.9:** тема → `GoRouter` / `StatefulShellRoute` → smart `NavShell`: на phone — `Scaffold(bottomNavigationBar: TBottomNavBar)`; на wide — `Row(TNavigationRail, Expanded(navigationShell))` → тап → `goBranch`. Бар/rail живут в `shared/widgets/`; раскладка chrome и связь с ветками — только в `utils/router/nav_shell.dart`.
+**Резюме §4.9:** `TBottomNavigatorBarTheme` (`ThemeExtension`) → `GoRouter` / `StatefulShellRoute` → smart `NavShell`: на phone — `Scaffold(bottomNavigationBar: TBottomNavBar)`; на wide — `Row(TNavigationRail, Expanded(navigationShell))` → тап → `goBranch`. Бар — кастомный dumb в `shared/widgets/`; раскладка chrome и связь с ветками — только в `utils/router/nav_shell.dart`.
 
 ---
 

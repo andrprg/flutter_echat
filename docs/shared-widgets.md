@@ -47,7 +47,7 @@
 | 20 | **Overlay** | 5 | `TModalOverlay` — затемнение под модалками / bottom sheet |
 | 21 | **Card Friend** | 4 | `TContactTile` — карточка контакта в списке друзей |
 | 22 | **Drop Button** | 4 | `TDropdownButton` — кнопка с выпадающим меню |
-| 23 | **Navbar** | 4 | `TBottomNavBar` — нижняя навигация (Chats / Groups / Profile / More) |
+| 23 | **Navbar** | 4 | `TBottomNavBar` — кастомный bottom bar (Чаты / Группы / Профиль / Ещё); токены — `TBottomNavigatorBarTheme` |
 | 24 | **Card Message** | 3 | `TConversationTile` — превью чата в списке |
 | 25 | **Input Your Name** | 3 | `TNameInput` — поле имени при регистрации |
 | 26 | **PIN Security** | 3 | `TPinDots` — индикатор введённых цифр PIN |
