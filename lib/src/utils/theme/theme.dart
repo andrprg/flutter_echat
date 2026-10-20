@@ -22,8 +22,9 @@ class TAppTheme {
       brightness: Brightness.light,
       colorScheme: TColors.lightColorScheme,
       scaffoldBackgroundColor: TColors.white,
-      bottomNavigationBarTheme:
-          TBottomNavigatorBarTheme.lightBottomNavigatorBarTheme,
+      extensions: const <ThemeExtension<dynamic>>[
+        TBottomNavigatorBarTheme.light,
+      ],
       inputDecorationTheme: TTextFormFieldTheme.lightInputDecorationTheme,
       elevatedButtonTheme: TElevatedButtonTheme.lightElevatedButtonTheme,
       progressIndicatorTheme: TProgressIndicatorTheme.light,
@@ -42,8 +43,9 @@ class TAppTheme {
       brightness: Brightness.dark,
       colorScheme: TColors.darkColorScheme,
       scaffoldBackgroundColor: TColors.neutral900Dark,
-      bottomNavigationBarTheme:
-          TBottomNavigatorBarTheme.darkBottomNavigatorBarTheme,
+      extensions: const <ThemeExtension<dynamic>>[
+        TBottomNavigatorBarTheme.dark,
+      ],
       inputDecorationTheme: TTextFormFieldTheme.darkInputDecorationTheme,
       elevatedButtonTheme: TElevatedButtonTheme.darkElevatedButtonTheme,
       progressIndicatorTheme: TProgressIndicatorTheme.dark,
