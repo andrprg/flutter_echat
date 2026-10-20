@@ -132,7 +132,7 @@
 
 | Компонент | Макет | Где используется | Flutter |
 | --- | --- | --- | --- |
-| Chrome: rail 72 / sidebar 240 + пункты `.dest` | `chrome()` / `.rail`, `.sidebar` | chats ×3, groups, profile, more (+ подложка диалогов и звонков) | `nav_shell.dart`: `TNavigationRail` / sidebar |
+| Chrome: rail 72 / sidebar 240 + пункты `.dest` | `chrome()` / `.rail`, `.sidebar`; иконки `assets/icons` (`chat`…`more` + `_selected`), active = `gradientLightBlue` | chats ×3, groups, profile, more (+ подложка диалогов и звонков) | `TBottomNavBar` → `nav_shell.dart`: rail / sidebar |
 | Вкладки списка (Chats/Groups/Status/Calls) | `.tabs`, `.tab` | master чатов и групп | `TTabs` (`t_tabs.dart`) |
 
 ### Списки и строки

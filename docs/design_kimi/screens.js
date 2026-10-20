@@ -56,6 +56,17 @@ function ic(name, size = 24) {
   return `<svg class="ic" width="${size}" height="${size}" viewBox="0 0 24 24">${ICONS[name]}</svg>`;
 }
 
+/* ---------------------------------------------------------------- Нав-иконки chrome */
+/* Те же SVG, что у TBottomNavBar / TIconWidget (assets/icons): outline + *_selected.
+   Selected — белый/акцент без color-filter; inactive — fill #9A9BB1 в ассете. */
+const NAV_ICON_DIR = '../../assets/icons';
+
+/** Иконка вкладки shell: name = chat | groups | profile | more */
+function navIc(name, selected, size = 24) {
+  const file = selected ? `${name}_selected.svg` : `${name}.svg`;
+  return `<img class="nav-ic" src="${NAV_ICON_DIR}/${file}" width="${size}" height="${size}" alt="" />`;
+}
+
 /* ---------------------------------------------------------------- Логотип */
 /* Файлы бренда из assets/logos: знак (174×158) и знак + wordmark (465×158).
    Версия под тему переключается классами logo-l / logo-d (см. tokens.css). */
@@ -108,25 +119,32 @@ const STORIES = ['Anneliese', 'Danielle', 'Theresa', 'Marvin', 'Floyd'];
 
 /* ---------------------------------------------------------------- Хелперы */
 
-/** Навигационный chrome: rail 72 (tablet portrait) / sidebar 240 (desktop и tablet landscape — ширина 1024 ≥ брейкпоинта 1024) */
+/** Навигационный chrome: rail 72 (tablet portrait) / sidebar 240 (desktop и tablet landscape — ширина 1024 ≥ брейкпоинта 1024).
+ *  Иконки и цвета active/inactive — как у TBottomNavBar (Figma Navbar). */
 function chrome(active, ff) {
   const dests = [
     { id: 'chats', icon: 'chat', label: 'Chats' },
-    { id: 'groups', icon: 'group', label: 'Groups' },
-    { id: 'profile', icon: 'user', label: 'Profile' },
-    { id: 'more', icon: 'grid', label: 'More' },
+    { id: 'groups', icon: 'groups', label: 'Groups' },
+    { id: 'profile', icon: 'profile', label: 'Profile' },
+    { id: 'more', icon: 'more', label: 'More' },
   ];
   if (ff === 'tablet') {
     return `<nav class="rail">
       ${logoMark(40)}
-      ${dests.map(d => `<button class="dest ${d.id === active ? 'active' : ''}" title="${d.label}">${ic(d.icon, 24)}</button>`).join('')}
+      ${dests.map(d => {
+        const sel = d.id === active;
+        return `<button class="dest ${sel ? 'active' : ''}" title="${d.label}">${navIc(d.icon, sel, 24)}</button>`;
+      }).join('')}
       <div class="spacer"></div>
       ${av('John Doe', 40)}
     </nav>`;
   }
   return `<nav class="sidebar">
     <div class="brand">${logoFull(34)}</div>
-    ${dests.map(d => `<button class="dest ${d.id === active ? 'active' : ''}">${ic(d.icon, 22)}<span class="lbl">${d.label}</span>${d.id === 'chats' ? '<span class="badge">9</span>' : ''}</button>`).join('')}
+    ${dests.map(d => {
+      const sel = d.id === active;
+      return `<button class="dest ${sel ? 'active' : ''}">${navIc(d.icon, sel, 22)}<span class="lbl">${d.label}</span>${d.id === 'chats' ? '<span class="badge">9</span>' : ''}</button>`;
+    }).join('')}
     <div class="spacer"></div>
     <button class="dest">${ic('moon', 22)}<span class="lbl">Dark Mode</span></button>
     <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;border-top:1px solid var(--divider);margin-top:4px">

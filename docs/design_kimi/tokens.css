@@ -134,19 +134,26 @@ body {
 .frame[data-theme="light"] .logo-d { display: none; }
 .frame[data-theme="dark"] .logo-l { display: none; }
 
+/* Пункты chrome — как TBottomNavBar: inactive neutral300, active — gradientLightBlue + белый */
 .dest {
   display: flex; align-items: center; gap: 12px;
   border: 0; background: none; cursor: pointer;
-  color: var(--on-variant); border-radius: 12px;
+  color: #9A9BB1; border-radius: 12px;
   font: inherit; text-align: left;
 }
 .rail .dest {
-  width: 48px; height: 48px; justify-content: center; border-radius: 14px;
+  width: 48px; height: 48px; justify-content: center; border-radius: 12px;
 }
 .sidebar .dest { padding: 11px 12px; font-size: 15px; font-weight: 500; width: 100%; }
-.dest:hover { background: var(--surface-2); }
-.dest.active { color: var(--primary); background: var(--primary-container); }
+.dest:hover:not(.active) { background: var(--surface-2); }
+.dest.active {
+  color: #fff;
+  background: linear-gradient(135deg, #40C4FF, #03A9F4);
+}
+/* Бейдж на активной плитке — контраст к градиенту */
+.dest.active .badge { background: #fff; color: #03A9F4; }
 .dest .lbl { flex: 1; }
+.nav-ic { display: block; flex: none; object-fit: contain; }
 .sidebar .spacer, .rail .spacer { flex: 1; }
 
 .avatar-mini { border-radius: 50%; }
