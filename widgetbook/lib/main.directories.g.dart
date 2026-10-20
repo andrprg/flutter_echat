@@ -13,6 +13,8 @@
 
 import 'package:flutter_echat_widgetbook/components/t_avatar.dart'
     as _flutter_echat_widgetbook_components_t_avatar;
+import 'package:flutter_echat_widgetbook/components/t_bottom_nav_bar.dart'
+    as _flutter_echat_widgetbook_components_t_bottom_nav_bar;
 import 'package:flutter_echat_widgetbook/components/t_button.dart'
     as _flutter_echat_widgetbook_components_t_button;
 import 'package:flutter_echat_widgetbook/components/t_error_banner.dart'
@@ -43,6 +45,36 @@ final directories = <_widgetbook.WidgetbookNode>[
                 name: 'Online',
                 builder: _flutter_echat_widgetbook_components_t_avatar
                     .buildTAvatarOnline,
+              ),
+            ],
+          ),
+          _widgetbook.WidgetbookComponent(
+            name: 'TBottomNavBar',
+            useCases: [
+              _widgetbook.WidgetbookUseCase(
+                name: 'Interactive',
+                builder: _flutter_echat_widgetbook_components_t_bottom_nav_bar
+                    .buildTBottomNavBarInteractive,
+              ),
+              _widgetbook.WidgetbookUseCase(
+                name: 'Группы',
+                builder: _flutter_echat_widgetbook_components_t_bottom_nav_bar
+                    .buildTBottomNavBarGroups,
+              ),
+              _widgetbook.WidgetbookUseCase(
+                name: 'Ещё',
+                builder: _flutter_echat_widgetbook_components_t_bottom_nav_bar
+                    .buildTBottomNavBarMore,
+              ),
+              _widgetbook.WidgetbookUseCase(
+                name: 'Профиль',
+                builder: _flutter_echat_widgetbook_components_t_bottom_nav_bar
+                    .buildTBottomNavBarProfile,
+              ),
+              _widgetbook.WidgetbookUseCase(
+                name: 'Чаты',
+                builder: _flutter_echat_widgetbook_components_t_bottom_nav_bar
+                    .buildTBottomNavBarChats,
               ),
             ],
           ),
